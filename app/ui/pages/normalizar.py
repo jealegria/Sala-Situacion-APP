@@ -25,7 +25,7 @@ from PyQt6.QtGui import QTextCursor, QFont, QClipboard
 from PyQt6.QtWidgets import QApplication
 
 from app.config import theme
-from app.config.paths import get_module_output_path
+from app.config.paths import get_module_input_path, get_module_output_path
 from app.modules.normalizar.processor import procesar_carpeta
 
 
@@ -252,8 +252,8 @@ class NormalizarPage(QWidget):
     # ── Valores por defecto ──────────────────────────────────────
 
     def _set_default_output(self):
-        default = get_module_output_path("normalizar")
-        self._output_field.setText(str(default))
+        self._input_field.setText(str(get_module_input_path("normalizar")))
+        self._output_field.setText(str(get_module_output_path("normalizar")))
 
     # ── Acciones de carpeta ──────────────────────────────────────
 
