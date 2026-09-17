@@ -1,12 +1,12 @@
 """
-Informes page placeholder.
+Imagenes — pagina placeholder.
 """
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel
 from PyQt6.QtCore import Qt
 from app.config import theme
 
 
-class InformesPage(QWidget):
+class ImagenesPage(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._build_ui()
@@ -17,7 +17,7 @@ class InformesPage(QWidget):
         layout.setSpacing(10)
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        title = QLabel("Informes")
+        title = QLabel("Informes — Imágenes")
         title.setObjectName("page_title")
 
         subtitle = QLabel("Modulo en construccion.")
