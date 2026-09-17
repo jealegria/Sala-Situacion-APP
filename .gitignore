@@ -23,6 +23,9 @@ env/
 .idea/
 *.swp
 
+# Outputs generados por la app
+Outputs/
+
 # OS
 .DS_Store
 Thumbs.db
