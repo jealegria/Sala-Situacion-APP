@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Informe de Eventos Obstétricos</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f4f7fa;
+    margin: 0;
+    padding: 40px 20px;
+    color: #222;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 960px;
+}
+
+h1 {
+    color: #1d4f7a;
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+.periodo {
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+    margin-top: 5px;
+    margin-bottom: 25px;
+    font-weight: 500;
+}
+
+/* ── Separador de Sección (Línea divisoria limpia) ── */
+.section-divider {
+    width: 100%;
+    margin: 45px 0 35px 0;
+    height: 1px;
+    background: #d8e2ec;
+    border: none;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 22px;
+}
+
+.section-title {
+    color: #1d4f7a;
+    font-size: 22px;
+    margin: 0;
+}
+
+.panel {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.panel-title {
+    font-size: 17px;
+    font-weight: bold;
+    color: #1d4f7a;
+    margin: 0;
+}
+
+/* ── Componente destacado para Año en Curso ── */
+.panel-current-year {
+    background: white;
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.09);
+    border-top: 4px solid #1d4f7a;
+}
+
+.panel-current-year.prem-accent {
+    border-top: 4px solid #d97706;
+}
+
+.current-year-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.current-year-badge {
+    background: #eaf1f8;
+    color: #1d4f7a;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.current-year-badge.prem {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.current-cards {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr;
+    gap: 16px;
+}
+
+.current-cards.four-cols {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+
+@media (max-width: 750px) {
+    .current-cards.four-cols {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 550px) {
+    .current-cards, .current-cards.four-cols {
+        grid-template-columns: 1fr;
+    }
+}
+
+.current-card {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 18px 14px;
+    text-align: center;
+    border: 1px solid #e2e8f0;
+}
+
+.current-card.main-total {
+    background: #f0f4f9;
+    border-color: #cbd5e1;
+}
+
+.current-card-label {
+    font-size: 13px;
+    color: #555;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.current-card-value {
+    font-size: 32px;
+    font-weight: 800;
+    color: #1d4f7a;
+    line-height: 1.1;
+}
+
+.current-card-sub {
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+}
+
+.current-card.vivos .current-card-value {
+    color: #2e7d32;
+}
+
+.current-card.defunciones .current-card-value {
+    color: #c62828;
+}
+
+.current-card.tasa-prem .current-card-value {
+    color: #d97706;
+}
+
+/* ── Botones y controles ── */
+.btn-group {
+    display: inline-flex;
+    background: #eef2f6;
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+}
+
+.btn-toggle {
+    border: none;
+    background: transparent;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-toggle.active {
+    background: #1d4f7a;
+    color: white;
+    box-shadow: 0 1px 4px rgba(29, 79, 122, 0.25);
+}
+
+.select-inline {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1d4f7a;
+    background: white;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.select-inline:focus {
+    border-color: #1d4f7a;
+}
+
+.chart-container {
+    position: relative;
+    height: 330px;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.chart-note {
+    font-size: 12px;
+    color: #777;
+    margin-top: 10px;
+    font-style: italic;
+    text-align: right;
+}
+
+/* ── Tablas ── */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 5px;
+}
+
+th {
+    background: #1d4f7a;
+    color: white;
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+th.text-right, td.text-right {
+    text-align: right;
+}
+
+th.text-center, td.text-center {
+    text-align: center;
+}
+
+td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e5e9f0;
+    font-size: 13px;
+}
+
+tr:hover td {
+    background-color: #f8fafc;
+}
+
+tr.row-current-year td {
+    background-color: #f2f7fc;
+    font-weight: 600;
+}
+
+tfoot tr td {
+    font-weight: bold;
+    background-color: #edf2f7;
+    border-top: 2px solid #1d4f7a;
+    color: #1d4f7a;
+}
+
+.badge-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: normal;
+    color: #1d4f7a;
+    background: #e2edf8;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--  SECCIÓN 1: EVENTOS OBSTÉTRICOS GENERALES          -->
+    <!-- ══════════════════════════════════════════════════ -->
+
+    <h1>Eventos Obstétricos</h1>
+    <div class="periodo">Período analizado: __PERIODO_ANALIZADO__</div>
+
+    <!-- Componente Destacado: Año en Curso -->
+    <div class="panel-current-year">
+        <div class="current-year-header">
+            <span class="panel-title" style="margin: 0;">Partos del Año en Curso (__CURRENT_YEAR__)</span>
+            <span class="current-year-badge">Año Actual</span>
+        </div>
+
+        <div class="current-cards">
+            <div class="current-card main-total">
+                <div class="current-card-label">Total de Partos</div>
+                <div class="current-card-value">__CURRENT_TOTAL__</div>
+                <div class="current-card-sub">Eventos registrados</div>
+            </div>
+
+            <div class="current-card vivos">
+                <div class="current-card-label">Nacidos Vivos</div>
+                <div class="current-card-value">__CURRENT_VIVOS__</div>
+                <div class="current-card-sub">__CURRENT_VIVOS_PCT__% del total</div>
+            </div>
+
+            <div class="current-card defunciones">
+                <div class="current-card-label">Defunciones Fetales</div>
+                <div class="current-card-value">__CURRENT_DEF__</div>
+                <div class="current-card-sub">__CURRENT_DEF_PCT__% del total</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico de Línea: Tendencia de Partos -->
+    <div class="panel">
+        <div class="panel-header">
+            <h2 class="panel-title" id="chart-title">Tendencia de Partos</h2>
+            <div class="btn-group">
+                <button class="btn-toggle active" id="btn-anual" onclick="cambiarVista('anual')">Anual</button>
+                <button class="btn-toggle" id="btn-mensual" onclick="cambiarVista('mensual')">Mensual</button>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="graficoTendencia"></canvas>
+        </div>
+        <div class="chart-note">* Nota: El año 2026 comprende registros hasta agosto.</div>
+    </div>
+
+    <!-- Tabla: Total de Partos por Año con Desglose de Condición -->
+    <div class="panel">
+        <h2 class="panel-title" style="margin-bottom: 16px;">Evolución Histórica de Partos por Año</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Año</th>
+                    <th class="text-right">Total Partos</th>
+                    <th class="text-right">Nacidos Vivos</th>
+                    <th class="text-right">% Vivos</th>
+                    <th class="text-right">Def. Fetales</th>
+                    <th class="text-right">% Def. Fetales</th>
+                    <th class="text-right">Sin Registrar</th>
+                </tr>
+            </thead>
+            <tbody>
+__FILAS_TABLA__
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td>Total General</td>
+                    <td class="text-right">__TOTAL_PARTOS__</td>
+                    <td class="text-right">__TOTAL_VIVOS__</td>
+                    <td class="text-right">__TOTAL_VIVOS_PCT__%</td>
+                    <td class="text-right">__TOTAL_DEF__</td>
+                    <td class="text-right">__TOTAL_DEF_PCT__%</td>
+                    <td class="text-right">__TOTAL_SINDATO__</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--  LÍNEA DIVISORIA                                   -->
+    <!-- ══════════════════════════════════════════════════ -->
+
+    <div class="section-divider"></div>
+
+    <div class="section-header">
+        <h2 class="section-title">Nacimientos Prematuros y Tasa de Prematurez (&lt; 32 semanas)</h2>
+    </div>
+
+    <!-- Componente Destacado: Prematurez Año en Curso -->
+    <div class="panel-current-year prem-accent">
+        <div class="current-year-header">
+            <span class="panel-title" style="margin: 0;">Prematurez en el Año en Curso (__CURRENT_YEAR__)</span>
+            <span class="current-year-badge prem">Año Actual</span>
+        </div>
+
+        <div class="current-cards four-cols">
+            <div class="current-card main-total">
+                <div class="current-card-label">Nacidos Vivos</div>
+                <div class="current-card-value">__CURRENT_VIVOS__</div>
+                <div class="current-card-sub">Base de nacimientos</div>
+            </div>
+
+            <div class="current-card">
+                <div class="current-card-label">Prematuros Vivos (&lt;32s)</div>
+                <div class="current-card-value" style="color: #1d4f7a;">__PREM_CURR_NV__</div>
+                <div class="current-card-sub">Casos registrados</div>
+            </div>
+
+            <div class="current-card tasa-prem">
+                <div class="current-card-label">Tasa Prematurez Vivos</div>
+                <div class="current-card-value">__PREM_CURR_TASA_NV__%</div>
+                <div class="current-card-sub">De nacidos vivos</div>
+            </div>
+
+            <div class="current-card">
+                <div class="current-card-label">Total Eventos &lt;32s</div>
+                <div class="current-card-value" style="color: #64748b;">__PREM_CURR_TOT__</div>
+                <div class="current-card-sub">Incluye defunciones fetales</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico Mixto: Barras de Casos + Línea Punteada Gris de Tasa -->
+    <div class="panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Prematurez por Año (&lt; 32 semanas)</h2>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="graficoPrematurez"></canvas>
+        </div>
+        <div class="chart-note">* Tasa calculada sobre nacidos vivos. Año 2026 acumulado hasta agosto.</div>
+    </div>
+
+    <!-- Tabla 1: Prematurez con Selector Anual / Mensual -->
+    <div class="panel">
+        <div class="panel-header">
+            <h2 class="panel-title" id="titulo-tabla-prem">Tasa de Prematurez por Año (&lt; 32 semanas)</h2>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <div class="btn-group">
+                    <button class="btn-toggle active" id="btn-tbl-anual" onclick="setVistaTablaPrem('anual')">Anual</button>
+                    <button class="btn-toggle" id="btn-tbl-mensual" onclick="setVistaTablaPrem('mensual')">Mensual</button>
+                </div>
+                <div id="wrapper-select-anio" style="display: none; align-items: center; gap: 6px;">
+                    <label for="select-anio-tabla" style="font-size: 13px; font-weight: 600; color: #1d4f7a;">Año:</label>
+                    <select id="select-anio-tabla" class="select-inline" onchange="cambiarAnioTablaMensual(this.value)">
+__OPCIONES_ANIOS_SELECT__
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <table id="tabla-prematurez">
+            <thead>
+                <tr>
+                    <th id="th-periodo-prem">Año</th>
+                    <th class="text-right">Nacidos Vivos</th>
+                    <th class="text-right">Prematuros Vivos (&lt;32s)</th>
+                    <th class="text-right">Tasa Prematurez (%)</th>
+                    <th class="text-right">Def. Fetales (&lt;32s)</th>
+                    <th class="text-right">Total Eventos (&lt;32s)</th>
+                    <th class="text-right">Tasa s/ Total Partos (%)</th>
+                </tr>
+            </thead>
+            <tbody id="tbody-prematurez">
+                <!-- Se inyecta dinámicamente -->
+            </tbody>
+            <tfoot id="tfoot-prematurez">
+                <!-- Se inyecta dinámicamente -->
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--  GRÁFICO DE BARRAS APILADAS AL 100%                -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <div class="panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Distribución de Nacimientos por Edad Gestacional</h2>
+        </div>
+
+        <div class="chart-container" style="height: 290px;">
+            <canvas id="graficoBarrasApiladas"></canvas>
+        </div>
+        <div class="chart-note">* Población: Recién nacidos vivos. Año 2026 comprende registros hasta agosto.</div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--  TABLA 2: DETALLE EDAD GESTACIONAL (ANUAL/MENSUAL) -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <div class="panel">
+        <div class="panel-header">
+            <h2 class="panel-title" id="titulo-tabla-eg">Detalle de Nacimientos por Edad Gestacional</h2>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <div class="btn-group">
+                    <button class="btn-toggle active" id="btn-eg-anual" onclick="setVistaTablaEg('anual')">Anual</button>
+                    <button class="btn-toggle" id="btn-eg-mensual" onclick="setVistaTablaEg('mensual')">Mensual</button>
+                </div>
+                <div id="wrapper-select-anio-eg" style="display: none; align-items: center; gap: 6px;">
+                    <label for="select-anio-eg" style="font-size: 13px; font-weight: 600; color: #1d4f7a;">Año:</label>
+                    <select id="select-anio-eg" class="select-inline" onchange="cambiarAnioTablaEg(this.value)">
+__OPCIONES_ANIOS_SELECT__
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <table id="tabla-eg">
+            <thead>
+                <tr>
+                    <th rowspan="2" id="th-periodo-eg" style="vertical-align: middle;">Año</th>
+                    <th colspan="2" class="text-center" style="border-bottom: 1px solid rgba(255,255,255,0.3);">Término (≥37s)</th>
+                    <th colspan="2" class="text-center" style="border-bottom: 1px solid rgba(255,255,255,0.3);">32 a 36 sem</th>
+                    <th colspan="2" class="text-center" style="border-bottom: 1px solid rgba(255,255,255,0.3);">28 a 31 sem</th>
+                    <th colspan="2" class="text-center" style="border-bottom: 1px solid rgba(255,255,255,0.3);">&lt;28 sem</th>
+                    <th rowspan="2" class="text-right" style="vertical-align: middle;">Total NV</th>
+                </tr>
+                <tr>
+                    <th class="text-right">N</th>
+                    <th class="text-right">%</th>
+                    <th class="text-right">N</th>
+                    <th class="text-right">%</th>
+                    <th class="text-right">N</th>
+                    <th class="text-right">%</th>
+                    <th class="text-right">N</th>
+                    <th class="text-right">%</th>
+                </tr>
+            </thead>
+            <tbody id="tbody-eg">
+                <!-- Inyección dinámica -->
+            </tbody>
+            <tfoot id="tfoot-eg">
+                <!-- Inyección dinámica -->
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--  LÍNEA DIVISORIA                                   -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <div class="section-divider"></div>
+
+    <div class="section-header">
+        <h2 class="section-title">Seguimiento de Peso al Nacer</h2>
+    </div>
+
+    <!-- Gráfico de Barras Apiladas al 100% de Peso al Nacer -->
+    <div class="panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Distribución de Nacimientos por Peso al Nacer</h2>
+        </div>
+
+        <div class="chart-container" style="height: 290px;">
+            <canvas id="graficoBarrasPeso"></canvas>
+        </div>
+        <div class="chart-note">* Población: Recién nacidos vivos. Año 2026 comprende registros hasta agosto.</div>
+    </div>
+
+    <!-- Tabla Detalle de Peso al Nacer (Anual / Mensual) -->
+    <div class="panel">
+        <div class="panel-header">
+            <h2 class="panel-title" id="titulo-tabla-peso">Detalle de Nacimientos por Peso al Nacer (Anual)</h2>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <div class="btn-group">
+                    <button class="btn-toggle active" id="btn-peso-anual" onclick="setVistaTablaPeso('anual')">Anual</button>
+                    <button class="btn-toggle" id="btn-peso-mensual" onclick="setVistaTablaPeso('mensual')">Mensual</button>
+                </div>
+                <div id="wrapper-select-anio-peso" style="display: none; align-items: center; gap: 6px;">
+                    <label for="select-anio-peso" style="font-size: 13px; font-weight: 600; color: #1d4f7a;">Año:</label>
+                    <select id="select-anio-peso" class="select-inline" onchange="cambiarAnioTablaPeso(this.value)">
+__OPCIONES_ANIOS_SELECT__
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <table id="tabla-peso">
+            <thead>
+                <tr>
+                    <th rowspan="2" id="th-periodo-peso" style="vertical-align: middle;">Año</th>
+                    <th colspan="2" class="text-center" style="border-bottom: 1px solid rgba(255,255,255,0.3);">Muy bajo peso (&lt;1500 g)</th>
+                    <th colspan="2" class="text-center" style="border-bottom: 1px solid rgba(255,255,255,0.3);">Bajo peso (1500-2499 g)</th>
+                    <th colspan="2" class="text-center" style="border-bottom: 1px solid rgba(255,255,255,0.3);">Peso adecuado (2500-3999 g)</th>
+                    <th colspan="2" class="text-center" style="border-bottom: 1px solid rgba(255,255,255,0.3);">Sobre peso (≥4000 g)</th>
+                    <th rowspan="2" class="text-right" style="vertical-align: middle;">Total NV</th>
+                </tr>
+                <tr>
+                    <th class="text-right">N</th>
+                    <th class="text-right">%</th>
+                    <th class="text-right">N</th>
+                    <th class="text-right">%</th>
+                    <th class="text-right">N</th>
+                    <th class="text-right">%</th>
+                    <th class="text-right">N</th>
+                    <th class="text-right">%</th>
+                </tr>
+            </thead>
+            <tbody id="tbody-peso">
+                <!-- Inyección dinámica -->
+            </tbody>
+            <tfoot id="tfoot-peso">
+                <!-- Inyección dinámica -->
+            </tfoot>
+        </table>
+    </div>
+
+</div>
+
+<script>
+// ─── DATOS PARTOS GENERALES ─────────────────────────────
+const dataAnual = __DATA_ANUAL_JSON__;
+const dataMensual = __DATA_MENSUAL_JSON__;
+
+let chartInstance = null;
+
+function renderizarGrafico(vista) {
+    const ctx = document.getElementById('graficoTendencia').getContext('2d');
+    const fuente = vista === 'mensual' ? dataMensual : dataAnual;
+
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
+
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: fuente.labels,
+            datasets: [
+                {
+                    label: 'Total Partos',
+                    data: fuente.total,
+                    borderColor: '#1d4f7a',
+                    backgroundColor: 'rgba(29, 79, 122, 0.08)',
+                    borderWidth: 2.5,
+                    pointBackgroundColor: '#1d4f7a',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    tension: 0.25,
+                    fill: true
+                },
+                {
+                    label: 'Nacidos Vivos',
+                    data: fuente.vivos,
+                    borderColor: '#2e7d32',
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#2e7d32',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    tension: 0.25,
+                    fill: false
+                },
+                {
+                    label: 'Defunciones Fetales',
+                    data: fuente.defunciones,
+                    borderColor: '#c62828',
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#c62828',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    tension: 0.25,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        boxWidth: 8,
+                        padding: 18,
+                        font: {
+                            family: "'Segoe UI', Arial, sans-serif",
+                            size: 13,
+                            weight: '600'
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    padding: 10,
+                    titleFont: { size: 13, weight: 'bold' },
+                    bodyFont: { size: 12 },
+                    usePointStyle: true
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 12 } }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#f0f2f5' },
+                    ticks: { precision: 0, font: { size: 12 } }
+                }
+            }
+        }
+    });
+}
+
+function cambiarVista(vista) {
+    document.getElementById('btn-anual').classList.toggle('active', vista === 'anual');
+    document.getElementById('btn-mensual').classList.toggle('active', vista === 'mensual');
+    renderizarGrafico(vista);
+}
+
+// ─── DATOS PREMATUREZ POR AÑO (BARRAS + LÍNEA PUNTEADA) ─
+const premDataAnual = __PREM_DATA_ANUAL_JSON__;
+
+function renderizarGraficoPremAnual() {
+    const ctx = document.getElementById('graficoPrematurez').getContext('2d');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: premDataAnual.labels,
+            datasets: [
+                {
+                    type: 'line',
+                    label: 'Tasa de Prematurez (%)',
+                    data: premDataAnual.tasa_nv,
+                    borderColor: '#64748b',
+                    borderWidth: 2.5,
+                    borderDash: [6, 6],
+                    pointBackgroundColor: '#64748b',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    tension: 0.2,
+                    yAxisID: 'yTasa',
+                    order: 1,
+                    fill: false
+                },
+                {
+                    type: 'bar',
+                    label: 'Nacidos Vivos',
+                    data: premDataAnual.nv_tot,
+                    backgroundColor: '#2e7d32',
+                    borderRadius: 4,
+                    yAxisID: 'yCasos',
+                    order: 2
+                },
+                {
+                    type: 'bar',
+                    label: 'Nacidos Vivos Prematuros (<32s)',
+                    data: premDataAnual.nv_prem,
+                    backgroundColor: '#f59e0b',
+                    borderRadius: 4,
+                    yAxisID: 'yCasos',
+                    order: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        boxWidth: 8,
+                        padding: 18,
+                        font: {
+                            family: "'Segoe UI', Arial, sans-serif",
+                            size: 13,
+                            weight: '600'
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    padding: 10,
+                    titleFont: { size: 13, weight: 'bold' },
+                    bodyFont: { size: 12 },
+                    usePointStyle: true,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) label += ': ';
+                            if (context.dataset.yAxisID === 'yTasa') {
+                                label += context.parsed.y + '%';
+                            } else {
+                                label += context.parsed.y.toLocaleString() + ' casos';
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 12 } }
+                },
+                yCasos: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    beginAtZero: true,
+                    grid: { color: '#f0f2f5' },
+                    title: {
+                        display: true,
+                        text: 'Cantidad de Casos',
+                        color: '#1d4f7a',
+                        font: { weight: 'bold', size: 12 }
+                    },
+                    ticks: { precision: 0, font: { size: 12 } }
+                },
+                yTasa: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    beginAtZero: true,
+                    grid: { drawOnChartArea: false },
+                    title: {
+                        display: true,
+                        text: 'Tasa de Prematurez (%)',
+                        color: '#64748b',
+                        font: { weight: 'bold', size: 12 }
+                    },
+                    ticks: {
+                        callback: function(val) { return val + '%'; },
+                        font: { size: 12 }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ─── TABLA 1: PREMATUREZ (<32 SEMANAS) (ANUAL / MENSUAL POR AÑO) ─
+const tablaPremAnualData = __TABLA_PREM_ANUAL_JSON__;
+const tablaPremMensualData = __TABLA_PREM_MENSUAL_JSON__;
+const tablaPremTotalesAnuales = __TABLA_PREM_TOTALES_ANUALES_JSON__;
+const tablaPremTotalGeneral = __TABLA_PREM_TOTAL_GENERAL_JSON__;
+
+let vistaActualTablaPrem = 'anual';
+
+function renderizarTablaPrematurez() {
+    const tbody = document.getElementById('tbody-prematurez');
+    const tfoot = document.getElementById('tfoot-prematurez');
+    const thPeriodo = document.getElementById('th-periodo-prem');
+    const titulo = document.getElementById('titulo-tabla-prem');
+
+    tbody.innerHTML = '';
+    tfoot.innerHTML = '';
+
+    if (vistaActualTablaPrem === 'anual') {
+        thPeriodo.innerText = 'Año';
+        titulo.innerText = 'Tasa de Prematurez por Año (< 32 semanas)';
+
+        tablaPremAnualData.forEach(r => {
+            const tr = document.createElement('tr');
+            if (r.is_curr) tr.className = 'row-current-year';
+            const badge = r.is_curr ? ' <span class="badge-tag">actual</span>' : '';
+            tr.innerHTML = `
+                <td><strong>${r.anio}</strong>${badge}</td>
+                <td class="text-right">${r.nv_cant.toLocaleString()}</td>
+                <td class="text-right"><strong>${r.nv_prem_cant.toLocaleString()}</strong></td>
+                <td class="text-right"><strong>${r.tasa_nv.toFixed(1)}%</strong></td>
+                <td class="text-right">${r.def_prem_cant.toLocaleString()}</td>
+                <td class="text-right">${r.tot_prem_cant.toLocaleString()}</td>
+                <td class="text-right">${r.tasa_global.toFixed(1)}%</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        const tot = tablaPremTotalGeneral;
+        tfoot.innerHTML = `
+            <tr>
+                <td>Total General</td>
+                <td class="text-right">${tot.nv_tot.toLocaleString()}</td>
+                <td class="text-right">${tot.nv_prem.toLocaleString()}</td>
+                <td class="text-right">${tot.tasa_nv.toFixed(1)}%</td>
+                <td class="text-right">${tot.def_prem.toLocaleString()}</td>
+                <td class="text-right">${tot.tot_prem.toLocaleString()}</td>
+                <td class="text-right">${tot.tasa_global.toFixed(1)}%</td>
+            </tr>
+        `;
+    } else {
+        const anioSel = document.getElementById('select-anio-tabla').value;
+        thPeriodo.innerText = 'Mes';
+        titulo.innerText = `Tasa de Prematurez Mensual - Año ${anioSel} (< 32 semanas)`;
+
+        const meses = tablaPremMensualData[anioSel] || [];
+        meses.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${r.mes_nombre}</strong></td>
+                <td class="text-right">${r.nv_tot.toLocaleString()}</td>
+                <td class="text-right"><strong>${r.nv_prem.toLocaleString()}</strong></td>
+                <td class="text-right"><strong>${r.tasa_nv.toFixed(1)}%</strong></td>
+                <td class="text-right">${r.def_prem.toLocaleString()}</td>
+                <td class="text-right">${r.tot_prem.toLocaleString()}</td>
+                <td class="text-right">${r.tasa_tot.toFixed(1)}%</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        const totAnio = tablaPremTotalesAnuales[anioSel] || { nv_tot: 0, nv_prem: 0, tasa_nv: 0, def_prem: 0, tot_prem: 0, tasa_global: 0 };
+        tfoot.innerHTML = `
+            <tr>
+                <td>Total Año ${anioSel}</td>
+                <td class="text-right">${totAnio.nv_tot.toLocaleString()}</td>
+                <td class="text-right">${totAnio.nv_prem.toLocaleString()}</td>
+                <td class="text-right">${totAnio.tasa_nv.toFixed(1)}%</td>
+                <td class="text-right">${totAnio.def_prem.toLocaleString()}</td>
+                <td class="text-right">${totAnio.tot_prem.toLocaleString()}</td>
+                <td class="text-right">${totAnio.tasa_global.toFixed(1)}%</td>
+            </tr>
+        `;
+    }
+}
+
+function setVistaTablaPrem(vista) {
+    vistaActualTablaPrem = vista;
+    document.getElementById('btn-tbl-anual').classList.toggle('active', vista === 'anual');
+    document.getElementById('btn-tbl-mensual').classList.toggle('active', vista === 'mensual');
+    document.getElementById('wrapper-select-anio').style.display = vista === 'mensual' ? 'inline-flex' : 'none';
+    renderizarTablaPrematurez();
+}
+
+function cambiarAnioTablaMensual(anio) {
+    renderizarTablaPrematurez();
+}
+
+// ─── GRÁFICO DE BARRAS APILADAS AL 100% ──────────────────
+const apiladoDatos = __APILADO_DATOS_JSON__;
+
+function renderizarBarrasApiladas() {
+    const ctx = document.getElementById('graficoBarrasApiladas').getContext('2d');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: apiladoDatos.labels,
+            datasets: [
+                {
+                    label: 'Termino',
+                    data: apiladoDatos.porcentajes['Termino'],
+                    backgroundColor: '#3266ad',
+                    barPercentage: 0.58
+                },
+                {
+                    label: '32 a 36 semanas',
+                    data: apiladoDatos.porcentajes['32 a 36 semanas'],
+                    backgroundColor: '#8dc63f',
+                    barPercentage: 0.58
+                },
+                {
+                    label: '28 a 31 semanas',
+                    data: apiladoDatos.porcentajes['28 a 31 semanas'],
+                    backgroundColor: '#ffff00',
+                    barPercentage: 0.58
+                },
+                {
+                    label: '<28 semanas',
+                    data: apiladoDatos.porcentajes['<28 semanas'],
+                    backgroundColor: '#e51c23',
+                    barPercentage: 0.58
+                }
+            ]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'nearest',
+                axis: 'y',
+                intersect: true
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: false,
+                        boxWidth: 13,
+                        boxHeight: 13,
+                        padding: 16,
+                        font: {
+                            family: "'Segoe UI', Arial, sans-serif",
+                            size: 12.5,
+                            weight: '500'
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                    padding: 10,
+                    titleFont: { size: 13, weight: 'bold' },
+                    bodyFont: { size: 12 },
+                    callbacks: {
+                        label: function(context) {
+                            const cat = context.dataset.label || '';
+                            const pct = context.parsed.x;
+                            const idx = context.dataIndex;
+                            const conteo = apiladoDatos.conteos[cat][idx];
+                            return `${cat}: ${pct.toFixed(1)}% (${conteo.toLocaleString()} nacimientos)`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    stacked: true,
+                    position: 'top',
+                    min: 0,
+                    max: 100,
+                    ticks: {
+                        stepSize: 10,
+                        callback: function(val) { return val + '%'; },
+                        font: { size: 12 }
+                    },
+                    grid: {
+                        color: '#e9eef3'
+                    }
+                },
+                y: {
+                    stacked: true,
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: { size: 13, weight: 'bold' },
+                        color: '#333'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ─── TABLA 2: DETALLE EDAD GESTACIONAL (ANUAL / MENSUAL POR AÑO) ─
+const tablaEgAnualData = __TABLA_EG_ANUAL_JSON__;
+const tablaEgMensualData = __TABLA_EG_MENSUAL_JSON__;
+const tablaEgTotalesAnuales = __TABLA_EG_TOTALES_ANUALES_JSON__;
+const tablaEgTotalGeneral = __TABLA_EG_TOTAL_GENERAL_JSON__;
+
+let vistaActualTablaEg = 'anual';
+
+function renderizarTablaEg() {
+    const tbody = document.getElementById('tbody-eg');
+    const tfoot = document.getElementById('tfoot-eg');
+    const thPeriodo = document.getElementById('th-periodo-eg');
+    const titulo = document.getElementById('titulo-tabla-eg');
+
+    tbody.innerHTML = '';
+    tfoot.innerHTML = '';
+
+    if (vistaActualTablaEg === 'anual') {
+        thPeriodo.innerText = 'Año';
+        titulo.innerText = 'Detalle de Nacimientos por Edad Gestacional (Anual)';
+
+        tablaEgAnualData.forEach(r => {
+            const tr = document.createElement('tr');
+            if (r.is_curr) tr.className = 'row-current-year';
+            const badge = r.is_curr ? ' <span class="badge-tag">actual</span>' : '';
+            tr.innerHTML = `
+                <td><strong>${r.anio}</strong>${badge}</td>
+                <td class="text-right">${r.t_cnt.toLocaleString()}</td>
+                <td class="text-right"><strong>${r.t_pct.toFixed(1)}%</strong></td>
+                <td class="text-right">${r.s32_cnt.toLocaleString()}</td>
+                <td class="text-right"><strong>${r.s32_pct.toFixed(1)}%</strong></td>
+                <td class="text-right">${r.s28_cnt.toLocaleString()}</td>
+                <td class="text-right"><strong>${r.s28_pct.toFixed(1)}%</strong></td>
+                <td class="text-right">${r.m28_cnt.toLocaleString()}</td>
+                <td class="text-right"><strong>${r.m28_pct.toFixed(1)}%</strong></td>
+                <td class="text-right"><strong>${r.tot.toLocaleString()}</strong></td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        const tot = tablaEgTotalGeneral;
+        tfoot.innerHTML = `
+            <tr>
+                <td>Total General</td>
+                <td class="text-right">${tot.t_cnt.toLocaleString()}</td>
+                <td class="text-right">${tot.t_pct.toFixed(1)}%</td>
+                <td class="text-right">${tot.s32_cnt.toLocaleString()}</td>
+                <td class="text-right">${tot.s32_pct.toFixed(1)}%</td>
+                <td class="text-right">${tot.s28_cnt.toLocaleString()}</td>
+                <td class="text-right">${tot.s28_pct.toFixed(1)}%</td>
+                <td class="text-right">${tot.m28_cnt.toLocaleString()}</td>
+                <td class="text-right">${tot.m28_pct.toFixed(1)}%</td>
+                <td class="text-right">${tot.tot.toLocaleString()}</td>
+            </tr>
+        `;
+    } else {
+        const anioSel = document.getElementById('select-anio-eg').value;
+        thPeriodo.innerText = 'Mes';
+        titulo.innerText = `Detalle por Edad Gestacional - Año ${anioSel}`;
+
+        const meses = tablaEgMensualData[anioSel] || [];
+        meses.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${r.mes}</strong></td>
+                <td class="text-right">${r.t_cnt.toLocaleString()}</td>
+                <td class="text-right"><strong>${r.t_pct.toFixed(1)}%</strong></td>
+                <td class="text-right">${r.s32_cnt.toLocaleString()}</td>
+                <td class="text-right"><strong>${r.s32_pct.toFixed(1)}%</strong></td>
+                <td class="text-right">${r.s28_cnt.toLocaleString()}</td>
+                <td class="text-right"><strong>${r.s28_pct.toFixed(1)}%</strong></td>
+                <td class="text-right">${r.m28_cnt.toLocaleString()}</td>
+                <td class="text-right"><strong>${r.m28_pct.toFixed(1)}%</strong></td>
+                <td class="text-right"><strong>${r.tot.toLocaleString()}</strong></td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        const totAnio = tablaEgTotalesAnuales[anioSel] || { tot: 0, t_cnt: 0, t_pct: 0, s32_cnt: 0, s32_pct: 0, s28_cnt: 0, s28_pct: 0, m28_cnt: 0, m28_pct: 0 };
+        tfoot.innerHTML = `
+            <tr>
+                <td>Total Año ${anioSel}</td>
+                <td class="text-right">${totAnio.t_cnt.toLocaleString()}</td>
+                <td class="text-right">${totAnio.t_pct.toFixed(1)}%</td>
+                <td class="text-right">${totAnio.s32_cnt.toLocaleString()}</td>
+                <td class="text-right">${totAnio.s32_pct.toFixed(1)}%</td>
+                <td class="text-right">${totAnio.s28_cnt.toLocaleString()}</td>
+                <td class="text-right">${totAnio.s28_pct.toFixed(1)}%</td>
+                <td class="text-right">${totAnio.m28_cnt.toLocaleString()}</td>
+                <td class="text-right">${totAnio.m28_pct.toFixed(1)}%</td>
+                <td class="text-right">${totAnio.tot.toLocaleString()}</td>
+            </tr>
+        `;
+    }
+}
+
+function setVistaTablaEg(vista) {
+    vistaActualTablaEg = vista;
+    document.getElementById('btn-eg-anual').classList.toggle('active', vista === 'anual');
+    document.getElementById('btn-eg-mensual').classList.toggle('active', vista === 'mensual');
+    document.getElementById('wrapper-select-anio-eg').style.display = vista === 'mensual' ? 'inline-flex' : 'none';
+    renderizarTablaEg();
+}
+
+function cambiarAnioTablaEg(anio) {
+    renderizarTablaEg();
+}
+
+// ─── SEGUIMIENTO DE PESO AL NACER ─────────────────────────
+const apiladoPesoDatos = __APILADO_PESO_DATOS_JSON__;
+const tablaPesoAnualData = __TABLA_PESO_ANUAL_JSON__;
+const tablaPesoMensualData = __TABLA_PESO_MENSUAL_JSON__;
+const tablaPesoTotalesAnuales = __TABLA_PESO_TOTALES_ANUALES_JSON__;
+const tablaPesoTotalGeneral = __TABLA_PESO_TOTAL_GENERAL_JSON__;
+
+function renderizarBarrasPeso() {
+    const ctx = document.getElementById('graficoBarrasPeso').getContext('2d');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: apiladoPesoDatos.labels,
+            datasets: [
+                {
+                    label: 'muy bajo peso <1500',
+                    data: apiladoPesoDatos.porcentajes['muy bajo peso <1500'],
+                    backgroundColor: '#ff0000',
+                    barPercentage: 0.58
+                },
+                {
+                    label: 'bajo peso 1500-2499 g',
+                    data: apiladoPesoDatos.porcentajes['bajo peso 1500-2499 g'],
+                    backgroundColor: '#ffc000',
+                    barPercentage: 0.58
+                },
+                {
+                    label: 'peso adecuado 2500-3999 g',
+                    data: apiladoPesoDatos.porcentajes['peso adecuado 2500-3999 g'],
+                    backgroundColor: '#92d050',
+                    barPercentage: 0.58
+                },
+                {
+                    label: 'sobre peso ≥4000 g',
+                    data: apiladoPesoDatos.porcentajes['sobre peso ≥4000 g'],
+                    backgroundColor: '#00b0f0',
+                    barPercentage: 0.58
+                }
+            ]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'nearest',
+                axis: 'y',
+                intersect: true
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: false,
+                        boxWidth: 13,
+                        boxHeight: 13,
+                        padding: 16,
+                        font: {
+                            family: "'Segoe UI', Arial, sans-serif",
+                            size: 12.5,
+                            weight: '500'
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                    padding: 10,
+                    titleFont: { size: 13, weight: 'bold' },
+                    bodyFont: { size: 12 },
+                    callbacks: {
+                        label: function(context) {
+                            const cat = context.dataset.label || '';
+                            const pct = context.parsed.x;
+                            const idx = context.dataIndex;
+                            const conteo = apiladoPesoDatos.conteos[cat][idx];
+                            return `${cat}: ${pct.toFixed(1)}% (${conteo.toLocaleString()} nacimientos)`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    stacked: true,
+                    position: 'top',
+                    min: 0,
+                    max: 100,
+                    ticks: {
+                        stepSize: 20,
+                        callback: function(val) { return val + '%'; },
+                        font: { size: 12 }
+                    },
+                    grid: {
+                        color: '#e9eef3'
+                    }
+                },
+                y: {
+                    stacked: true,
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: { size: 13, weight: 'bold' },
+                        color: '#333'
+                    }
+                }
+            }
+        }
+    });
+}
+
+let vistaActualTablaPeso = 'anual';
+
+function renderizarTablaPeso() {
+    const tbody = document.getElementById('tbody-peso');
+    const tfoot = document.getElementById('tfoot-peso');
+    const thPeriodo = document.getElementById('th-periodo-peso');
+    const titulo = document.getElementById('titulo-tabla-peso');
+
+    tbody.innerHTML = '';
+    tfoot.innerHTML = '';
+
+    if (vistaActualTablaPeso === 'anual') {
+        thPeriodo.innerText = 'Año';
+        titulo.innerText = 'Detalle de Nacimientos por Peso al Nacer (Anual)';
+
+        tablaPesoAnualData.forEach(r => {
+            const tr = document.createElement('tr');
+            if (r.is_curr) tr.className = 'row-current-year';
+            const badge = r.is_curr ? ' <span class="badge-tag">actual</span>' : '';
+            tr.innerHTML = `
+                <td><strong>${r.anio}</strong>${badge}</td>
+                <td class="text-right">${r.mb_cnt.toLocaleString()}</td>
+                <td class="text-right"><strong>${r.mb_pct.toFixed(1)}%</strong></td>
+                <td class="text-right">${r.b_cnt.toLocaleString()}</td>
+                <td class="text-right"><strong>${r.b_pct.toFixed(1)}%</strong></td>
+                <td class="text-right">${r.ad_cnt.toLocaleString()}</td>
+                <td class="text-right"><strong>${r.ad_pct.toFixed(1)}%</strong></td>
+                <td class="text-right">${r.sp_cnt.toLocaleString()}</td>
+                <td class="text-right"><strong>${r.sp_pct.toFixed(1)}%</strong></td>
+                <td class="text-right"><strong>${r.tot.toLocaleString()}</strong></td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        const tot = tablaPesoTotalGeneral;
+        tfoot.innerHTML = `
+            <tr>
+                <td>Total General</td>
+                <td class="text-right">${tot.mb_cnt.toLocaleString()}</td>
+                <td class="text-right">${tot.mb_pct.toFixed(1)}%</td>
+                <td class="text-right">${tot.b_cnt.toLocaleString()}</td>
+                <td class="text-right">${tot.b_pct.toFixed(1)}%</td>
+                <td class="text-right">${tot.ad_cnt.toLocaleString()}</td>
+                <td class="text-right">${tot.ad_pct.toFixed(1)}%</td>
+                <td class="text-right">${tot.sp_cnt.toLocaleString()}</td>
+                <td class="text-right">${tot.sp_pct.toFixed(1)}%</td>
+                <td class="text-right">${tot.tot.toLocaleString()}</td>
+            </tr>
+        `;
+    } else {
+        const anioSel = document.getElementById('select-anio-peso').value;
+        thPeriodo.innerText = 'Mes';
+        titulo.innerText = `Detalle por Peso al Nacer - Año ${anioSel}`;
+
+        const meses = tablaPesoMensualData[anioSel] || [];
+        meses.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${r.mes}</strong></td>
+                <td class="text-right">${r.mb_cnt.toLocaleString()}</td>
+                <td class="text-right"><strong>${r.mb_pct.toFixed(1)}%</strong></td>
+                <td class="text-right">${r.b_cnt.toLocaleString()}</td>
+                <td class="text-right"><strong>${r.b_pct.toFixed(1)}%</strong></td>
+                <td class="text-right">${r.ad_cnt.toLocaleString()}</td>
+                <td class="text-right"><strong>${r.ad_pct.toFixed(1)}%</strong></td>
+                <td class="text-right">${r.sp_cnt.toLocaleString()}</td>
+                <td class="text-right"><strong>${r.sp_pct.toFixed(1)}%</strong></td>
+                <td class="text-right"><strong>${r.tot.toLocaleString()}</strong></td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        const totAnio = tablaPesoTotalesAnuales[anioSel] || { tot: 0, mb_cnt: 0, mb_pct: 0, b_cnt: 0, b_pct: 0, ad_cnt: 0, ad_pct: 0, sp_cnt: 0, sp_pct: 0 };
+        tfoot.innerHTML = `
+            <tr>
+                <td>Total Año ${anioSel}</td>
+                <td class="text-right">${totAnio.mb_cnt.toLocaleString()}</td>
+                <td class="text-right">${totAnio.mb_pct.toFixed(1)}%</td>
+                <td class="text-right">${totAnio.b_cnt.toLocaleString()}</td>
+                <td class="text-right">${totAnio.b_pct.toFixed(1)}%</td>
+                <td class="text-right">${totAnio.ad_cnt.toLocaleString()}</td>
+                <td class="text-right">${totAnio.ad_pct.toFixed(1)}%</td>
+                <td class="text-right">${totAnio.sp_cnt.toLocaleString()}</td>
+                <td class="text-right">${totAnio.sp_pct.toFixed(1)}%</td>
+                <td class="text-right">${totAnio.tot.toLocaleString()}</td>
+            </tr>
+        `;
+    }
+}
+
+function setVistaTablaPeso(vista) {
+    vistaActualTablaPeso = vista;
+    document.getElementById('btn-peso-anual').classList.toggle('active', vista === 'anual');
+    document.getElementById('btn-peso-mensual').classList.toggle('active', vista === 'mensual');
+    document.getElementById('wrapper-select-anio-peso').style.display = vista === 'mensual' ? 'inline-flex' : 'none';
+    renderizarTablaPeso();
+}
+
+function cambiarAnioTablaPeso(anio) {
+    renderizarTablaPeso();
+}
+
+// Inicializar todos los componentes
+renderizarGrafico('anual');
+renderizarGraficoPremAnual();
+renderizarTablaPrematurez();
+renderizarBarrasApiladas();
+renderizarTablaEg();
+renderizarBarrasPeso();
+renderizarTablaPeso();
+</script>
+
+</body>
+</html>
