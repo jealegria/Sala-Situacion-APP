@@ -23,10 +23,11 @@ from app.ui.pages.normalizar import NormalizarPage
 from app.ui.pages.procesos import ProcesosPage
 
 # Sub-paginas de Informes
-from app.ui.pages.informes.guardia      import GuardiaPage
-from app.ui.pages.informes.sm_tocogineco import SmTocoginecPage
-from app.ui.pages.informes.vacunatorio   import VacunatorioPage
-from app.ui.pages.informes.imagenes     import ImagenesPage
+from app.ui.pages.informes.guardia             import GuardiaPage
+from app.ui.pages.informes.sm_tocogineco        import SmTocoginecPage
+from app.ui.pages.informes.vacunatorio          import VacunatorioPage
+from app.ui.pages.informes.eventos_obstetricos import EventosObstetricosPage
+from app.ui.pages.informes.imagenes            import ImagenesPage
 
 
 class MainWindow(QMainWindow):
@@ -86,10 +87,11 @@ class MainWindow(QMainWindow):
             group_key="informes",
             label="Informes",
             items=[
-                ("inf_guardia",       "Guardia",          GuardiaPage()),
-                ("inf_sm_tocogineco", "SM y Tocogineco",  SmTocoginecPage()),
-                ("inf_vacunatorio",   "Vacunatorio",      VacunatorioPage()),
-                ("inf_imagenes",      "Imágenes",         ImagenesPage()),
+                ("inf_guardia",            "Guardia",              GuardiaPage()),
+                ("inf_sm_tocogineco",      "SM y Tocogineco",      SmTocoginecPage()),
+                ("inf_vacunatorio",        "Vacunatorio",          VacunatorioPage()),
+                ("inf_eventos_obstetricos", "Eventos Obstétricos", EventosObstetricosPage()),
+                ("inf_imagenes",           "Imágenes",             ImagenesPage()),
             ]
         )
 

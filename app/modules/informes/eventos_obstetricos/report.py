@@ -86,6 +86,7 @@ def generar_informe(
     input_path: Path = DEFAULT_INPUT_PATH,
     output_path: Path = DEFAULT_OUTPUT_PATH,
     log: LogFn = print,
+    anio: int | None = None,
 ) -> Path | None:
     """
     Consolida los CSVs de eventos obstétricos:
@@ -195,11 +196,14 @@ def generar_informe(
     tabla_conteo = tabla_conteo.sort_index()
 
     # Identificar año en curso
-    anio_actual = datetime.now().year
-    if anio_actual in tabla_conteo.index:
-        current_year = anio_actual
+    if anio and anio in tabla_conteo.index:
+        current_year = int(anio)
     else:
-        current_year = int(tabla_conteo.index.max())
+        anio_actual = datetime.now().year
+        if anio_actual in tabla_conteo.index:
+            current_year = anio_actual
+        else:
+            current_year = int(tabla_conteo.index.max())
 
     row_curr = tabla_conteo.loc[current_year]
     curr_total = int(row_curr["Total Partos"])
