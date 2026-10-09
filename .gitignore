@@ -29,3 +29,10 @@ Outputs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Scripts legacy (solo referencia local)
+_legacy/
+
+# Datos de entrada locales
+Inputs/
+

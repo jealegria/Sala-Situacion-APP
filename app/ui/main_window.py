@@ -29,6 +29,9 @@ from app.ui.pages.informes.vacunatorio          import VacunatorioPage
 from app.ui.pages.informes.eventos_obstetricos import EventosObstetricosPage
 from app.ui.pages.informes.imagenes            import ImagenesPage
 
+# Sub-paginas de Utilidades
+from app.ui.pages.utilidades.partos_con_vsr    import PartosConVsrPage
+
 
 class MainWindow(QMainWindow):
     """Ventana principal de Sala de Situacion APP."""
@@ -90,8 +93,17 @@ class MainWindow(QMainWindow):
                 ("inf_guardia",            "Guardia",              GuardiaPage()),
                 ("inf_sm_tocogineco",      "SM y Tocogineco",      SmTocoginecPage()),
                 ("inf_vacunatorio",        "Vacunatorio",          VacunatorioPage()),
-                ("inf_eventos_obstetricos", "Eventos Obstétricos", EventosObstetricosPage()),
+                ("inf_eventos_obstetricos", "Panel de Obstetricia", EventosObstetricosPage()),
                 ("inf_imagenes",           "Imágenes",             ImagenesPage()),
+            ]
+        )
+
+        # Grupo colapsable: Utilidades
+        _register_group(
+            group_key="utilidades",
+            label="Utilidades",
+            items=[
+                ("util_partos_con_vsr", "Partos con VSR", PartosConVsrPage()),
             ]
         )
 

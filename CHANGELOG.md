@@ -1,5 +1,15 @@
 # Changelog
 
+## [Sin publicar]
+
+### Agregado
+- Grupo de menu Utilidades:
+  - Submodulo Partos con VSR: cruce de eventos obstetricos con vacunas VSR (SISA), marcando si la aplicacion cayo en la ventana valida (sem 32 a 36+6). Genera `eventos_obstetricos_con_vsr.csv` en Outputs/utilidades.
+  - UI con selectores de archivo (no carpeta) para ambos inputs, precargando el CSV mas reciente de cada carpeta de origen.
+- Informes > Submodulo Imagenes (reemplaza el placeholder):
+  - Consolidacion de agendas, fuera de agenda e Intranet (imagenes), filtrado de prestaciones de diagnostico por imagen, mapeo de grupos de procedimiento y cruce con internacion Andes.
+  - Panel HTML interactivo (`Panel Imagenes.html`) con plantilla separada en `template.html`; el anio es parametrizable.
+
 ## [0.5.0-beta] - 2026-09-17
 
 ### Agregado

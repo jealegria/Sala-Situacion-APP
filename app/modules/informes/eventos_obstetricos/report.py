@@ -22,7 +22,7 @@ TEMPLATE_PATH       = MODULE_DIR / "template.html"
 
 DEFAULT_INPUT_PATH  = Path(r"C:\02_HPN\01_Base\eventos_obstetricos")
 DEFAULT_OUTPUT_PATH = Path(r"C:\03_Apps\Sala-Situacion-APP\Outputs\informes")
-HTML_OUTPUT_NAME    = "eventos_obstetricos.html"
+HTML_OUTPUT_NAME    = "Panel Obstetricia.html"
 
 LogFn = Callable[[str], None]
 
@@ -258,6 +258,36 @@ def generar_informe(
         "vivos": [int(x) for x in tabla_conteo["Nacidos Vivos"]],
         "defunciones": [int(x) for x in tabla_conteo["Defunciones Fetales"]],
     }
+
+    anios_disponibles = [int(a) for a in sorted(df_validas["anio"].unique(), reverse=True)]
+
+    nombres_meses_abrev = [
+        "ene", "feb", "mar", "abr", "may", "jun",
+        "jul", "ago", "sep", "oct", "nov", "dic"
+    ]
+    datos_mensuales_por_anio = {}
+    for anio_d in anios_disponibles:
+        grp_a = df_validas[df_validas["anio"] == anio_d]
+        max_m = int(grp_a["mes_num"].max()) if len(grp_a) > 0 else 12
+        labels_m = []
+        tot_m_list = []
+        viv_m_list = []
+        def_m_list = []
+        for m in range(1, max_m + 1):
+            grp_m = grp_a[grp_a["mes_num"] == m]
+            labels_m.append(nombres_meses_abrev[m - 1])
+            tot_m = len(grp_m)
+            viv_m = int((grp_m["cond_tipo"] == "Nacidos Vivos").sum())
+            def_m = int((grp_m["cond_tipo"] == "Defunciones Fetales").sum())
+            tot_m_list.append(tot_m)
+            viv_m_list.append(viv_m)
+            def_m_list.append(def_m)
+        datos_mensuales_por_anio[int(anio_d)] = {
+            "labels": labels_m,
+            "total": tot_m_list,
+            "vivos": viv_m_list,
+            "defunciones": def_m_list,
+        }
 
     df_validas["periodo_mes"] = df_validas["fechaegreso_parsed"].dt.strftime("%Y-%m")
     tabla_mensual = df_validas.groupby(["periodo_mes", "cond_tipo"]).size().unstack(fill_value=0)
@@ -661,6 +691,7 @@ def generar_informe(
         .replace("__TOTAL_SINDATO__", f"{tot_general_sd:,}")
         .replace("__DATA_ANUAL_JSON__", json.dumps(datos_anuales, ensure_ascii=False))
         .replace("__DATA_MENSUAL_JSON__", json.dumps(datos_mensuales, ensure_ascii=False))
+        .replace("__DATA_MENSUAL_POR_ANIO_JSON__", json.dumps(datos_mensuales_por_anio, ensure_ascii=False))
         # Variables de Prematurez
         .replace("__PREM_CURR_NV__", f"{curr_prem_nv_prem:,}")
         .replace("__PREM_CURR_TASA_NV__", curr_prem_tasa_nv)

@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<title>Informe de Eventos Obstétricos</title>
+<title>Panel de Obstetricia</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -311,7 +311,7 @@ tfoot tr td {
     <!--  SECCIÓN 1: EVENTOS OBSTÉTRICOS GENERALES          -->
     <!-- ══════════════════════════════════════════════════ -->
 
-    <h1>Eventos Obstétricos</h1>
+    <h1>Panel de Obstetricia</h1>
     <div class="periodo">Período analizado: __PERIODO_ANALIZADO__</div>
 
     <!-- Componente Destacado: Año en Curso -->
@@ -346,9 +346,17 @@ tfoot tr td {
     <div class="panel">
         <div class="panel-header">
             <h2 class="panel-title" id="chart-title">Tendencia de Partos</h2>
-            <div class="btn-group">
-                <button class="btn-toggle active" id="btn-anual" onclick="cambiarVista('anual')">Anual</button>
-                <button class="btn-toggle" id="btn-mensual" onclick="cambiarVista('mensual')">Mensual</button>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <div class="btn-group">
+                    <button class="btn-toggle active" id="btn-anual" onclick="cambiarVista('anual')">Anual</button>
+                    <button class="btn-toggle" id="btn-mensual" onclick="cambiarVista('mensual')">Mensual</button>
+                </div>
+                <div id="wrapper-select-anio-tendencia" style="display: none; align-items: center; gap: 6px;">
+                    <label for="select-anio-tendencia" style="font-size: 13px; font-weight: 600; color: #1d4f7a;">Año:</label>
+                    <select id="select-anio-tendencia" class="select-inline" onchange="cambiarAnioTendencia(this.value)">
+__OPCIONES_ANIOS_SELECT__
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -624,13 +632,25 @@ __OPCIONES_ANIOS_SELECT__
 <script>
 // ─── DATOS PARTOS GENERALES ─────────────────────────────
 const dataAnual = __DATA_ANUAL_JSON__;
-const dataMensual = __DATA_MENSUAL_JSON__;
+const dataMensualPorAnio = __DATA_MENSUAL_POR_ANIO_JSON__;
 
 let chartInstance = null;
+let vistaActualTendencia = 'anual';
 
 function renderizarGrafico(vista) {
+    if (vista) vistaActualTendencia = vista;
     const ctx = document.getElementById('graficoTendencia').getContext('2d');
-    const fuente = vista === 'mensual' ? dataMensual : dataAnual;
+    const chartTitle = document.getElementById('chart-title');
+
+    let fuente;
+    if (vistaActualTendencia === 'mensual') {
+        const anioSel = document.getElementById('select-anio-tendencia').value;
+        fuente = dataMensualPorAnio[anioSel] || { labels: [], total: [], vivos: [], defunciones: [] };
+        if (chartTitle) chartTitle.innerText = `Tendencia Mensual de Partos - Año ${anioSel}`;
+    } else {
+        fuente = dataAnual;
+        if (chartTitle) chartTitle.innerText = 'Tendencia de Partos por Año';
+    }
 
     if (chartInstance) {
         chartInstance.destroy();
@@ -730,9 +750,15 @@ function renderizarGrafico(vista) {
 }
 
 function cambiarVista(vista) {
+    vistaActualTendencia = vista;
     document.getElementById('btn-anual').classList.toggle('active', vista === 'anual');
     document.getElementById('btn-mensual').classList.toggle('active', vista === 'mensual');
-    renderizarGrafico(vista);
+    document.getElementById('wrapper-select-anio-tendencia').style.display = vista === 'mensual' ? 'inline-flex' : 'none';
+    renderizarGrafico();
+}
+
+function cambiarAnioTendencia(anio) {
+    renderizarGrafico();
 }
 
 // ─── DATOS PREMATUREZ POR AÑO (BARRAS + LÍNEA PUNTEADA) ─

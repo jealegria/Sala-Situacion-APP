@@ -1,43 +1,36 @@
 """
-imagenes.py  (UI page)
-=======================
-Pagina del informe de Imagenes.
+partos_con_vsr.py  (UI page)
+=============================
+Pagina de la utilidad Partos con VSR.
 
 Layout:
-  - Campo Input 1 : carpeta agendas_consolidado      + [Abrir carpeta] [Seleccionar carpeta]
-  - Campo Input 2 : carpeta fuera_agenda             + [Abrir carpeta] [Seleccionar carpeta]
-  - Campo Input 3 : carpeta internacion_andes        + [Abrir carpeta] [Seleccionar carpeta]
-  - Campo Input 4 : carpeta imagenes (Intranet)      + [Abrir carpeta] [Seleccionar carpeta]
-  - Campo Input 5 : archivo de mapeo de grupos (CSV) + [Abrir carpeta] [Seleccionar archivo]
-  - Campo Output  : carpeta de salida                + [Abrir carpeta] [Seleccionar carpeta]
-  - Campo Año     : año del reporte (por defecto: año actual)
-  - Boton [Generar Informe]
+  - Campo Input 1 : archivo CSV de eventos obstetricos + [Abrir carpeta] [Seleccionar archivo]
+  - Campo Input 2 : archivo CSV de vacunas VSR (SISA)  + [Abrir carpeta] [Seleccionar archivo]
+  - Campo Output  : carpeta de salida del CSV          + [Abrir carpeta] [Seleccionar carpeta]
+  - Boton [Procesar]
   - Consola de output (read-only, monoespaciado)
   - Botones [Copiar] [Limpiar]
 
+Por defecto se precarga el CSV mas reciente de cada carpeta de origen.
 El procesamiento corre en un QThread para no bloquear la UI.
 """
 import subprocess
-from datetime import datetime
 from pathlib import Path
 
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QLineEdit, QTextEdit, QFileDialog,
-    QSizePolicy, QSpinBox, QApplication,
+    QSizePolicy, QApplication,
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QTextCursor, QFont
 
 from app.config import theme
-from app.modules.informes.imagenes.report import (
-    generar_informe,
-    DEFAULT_INPUT_AGENDAS,
-    DEFAULT_INPUT_FUERA_AGENDA,
-    DEFAULT_INPUT_INTERNACION,
-    DEFAULT_INPUT_IMAGENES,
-    DEFAULT_MAPEO_DIR,
-    DEFAULT_MAPEO_FILE,
+from app.modules.utilidades.partos_con_vsr.processor import (
+    procesar_partos_con_vsr,
+    archivo_mas_reciente,
+    DEFAULT_EVENTOS_DIR,
+    DEFAULT_VSR_DIR,
     DEFAULT_OUTPUT_PATH,
 )
 
@@ -46,40 +39,20 @@ from app.modules.informes.imagenes.report import (
 #  WORKER THREAD
 # ══════════════════════════════════════════════════════════════
 
-class _ImagenesWorker(QThread):
+class _PartosConVsrWorker(QThread):
     log_signal      = pyqtSignal(str)
     finished_signal = pyqtSignal()
 
-    def __init__(
-        self,
-        input_agendas: Path | None,
-        input_fuera_agenda: Path | None,
-        input_internacion: Path | None,
-        input_imagenes: Path | None,
-        mapeo_file: Path | None,
-        output_path: Path,
-        anio: int,
-    ):
+    def __init__(self, eventos_file: Path, vsr_file: Path, output_path: Path):
         super().__init__()
-        self._input_agendas      = input_agendas
-        self._input_fuera_agenda = input_fuera_agenda
-        self._input_internacion  = input_internacion
-        self._input_imagenes     = input_imagenes
-        self._mapeo_file         = mapeo_file
-        self._output             = output_path
-        self._anio               = anio
+        self._eventos = eventos_file
+        self._vsr     = vsr_file
+        self._output  = output_path
 
     def run(self):
         try:
-            generar_informe(
-                input_agendas=self._input_agendas,
-                input_fuera_agenda=self._input_fuera_agenda,
-                input_internacion=self._input_internacion,
-                input_imagenes=self._input_imagenes,
-                mapeo_file=self._mapeo_file,
-                output_path=self._output,
-                log=self.log_signal.emit,
-                anio=self._anio,
+            procesar_partos_con_vsr(
+                self._eventos, self._vsr, self._output, self.log_signal.emit
             )
         except Exception as e:
             self.log_signal.emit(f"\n[ERROR CRITICO] {e}")
@@ -91,10 +64,10 @@ class _ImagenesWorker(QThread):
 #  PAGINA
 # ══════════════════════════════════════════════════════════════
 
-class ImagenesPage(QWidget):
+class PartosConVsrPage(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._worker: _ImagenesWorker | None = None
+        self._worker: _PartosConVsrWorker | None = None
         self._build_ui()
         self._set_defaults()
 
@@ -106,86 +79,48 @@ class ImagenesPage(QWidget):
         root.setSpacing(0)
 
         # Titulo
-        title = QLabel("Imágenes")
+        title = QLabel("Partos con VSR")
         title.setObjectName("page_title")
         root.addWidget(title)
         root.addSpacing(4)
 
         subtitle = QLabel(
-            "Genera el Panel de Imágenes (prestaciones, pacientes, internados, localidad "
-            "y edad) a partir de agendas, fuera de agenda, Intranet e internación."
+            "Cruza los eventos obstétricos con las vacunas VSR registradas en SISA y "
+            "marca si la aplicación ocurrió dentro de la ventana válida "
+            "(semana 32 a 36+6 de gestación)."
         )
         subtitle.setObjectName("page_subtitle")
         subtitle.setWordWrap(True)
         root.addWidget(subtitle)
-        root.addSpacing(20)
+        root.addSpacing(28)
 
-        # ── Inputs (carpetas) ────────────────────────────────────
-        root.addWidget(self._make_section_label("Carpeta Agendas consolidadas (input)"))
+        # ── Input: eventos obstetricos ───────────────────────────
+        root.addWidget(self._make_section_label("Archivo de eventos obstétricos (input)"))
         root.addSpacing(6)
-        self._input_agendas_field, row = self._make_folder_row()
-        root.addLayout(row)
-        root.addSpacing(12)
-
-        root.addWidget(self._make_section_label("Carpeta Fuera de agenda (input)"))
-        root.addSpacing(6)
-        self._input_fuera_field, row = self._make_folder_row()
-        root.addLayout(row)
-        root.addSpacing(12)
-
-        root.addWidget(self._make_section_label("Carpeta Internación Andes (input)"))
-        root.addSpacing(6)
-        self._input_internacion_field, row = self._make_folder_row()
-        root.addLayout(row)
-        root.addSpacing(12)
-
-        root.addWidget(self._make_section_label("Carpeta Imágenes - Intranet (input)"))
-        root.addSpacing(6)
-        self._input_imagenes_field, row = self._make_folder_row()
-        root.addLayout(row)
-        root.addSpacing(12)
-
-        # ── Input (archivo de mapeo) ─────────────────────────────
-        root.addWidget(self._make_section_label("Archivo de mapeo de procedimientos (input)"))
-        root.addSpacing(6)
-        self._mapeo_field, row = self._make_file_row(
-            "Seleccionar archivo de mapeo de procedimientos", DEFAULT_MAPEO_DIR
+        self._eventos_field, eventos_row = self._make_file_row(
+            "Seleccionar archivo de eventos obstétricos", DEFAULT_EVENTOS_DIR
         )
-        root.addLayout(row)
-        root.addSpacing(12)
+        root.addLayout(eventos_row)
+        root.addSpacing(18)
+
+        # ── Input: vacunas VSR ───────────────────────────────────
+        root.addWidget(self._make_section_label("Archivo de vacunas VSR - SISA (input)"))
+        root.addSpacing(6)
+        self._vsr_field, vsr_row = self._make_file_row(
+            "Seleccionar archivo de vacunas VSR", DEFAULT_VSR_DIR
+        )
+        root.addLayout(vsr_row)
+        root.addSpacing(18)
 
         # ── Output ───────────────────────────────────────────────
         root.addWidget(self._make_section_label("Carpeta de salida (output)"))
         root.addSpacing(6)
-        self._output_field, row = self._make_folder_row()
-        root.addLayout(row)
-        root.addSpacing(16)
+        self._output_field, output_row = self._make_folder_row()
+        root.addLayout(output_row)
+        root.addSpacing(18)
 
-        # ── Campo Año + Boton Generar ────────────────────────────
-        root.addWidget(self._make_section_label("Año del reporte"))
-        root.addSpacing(6)
-
-        self._anio_spin = QSpinBox()
-        self._anio_spin.setRange(2020, 2100)
-        self._anio_spin.setValue(datetime.now().year)
-        self._anio_spin.setFixedHeight(36)
-        self._anio_spin.setFixedWidth(100)
-        self._anio_spin.setStyleSheet(
-            f"QSpinBox {{"
-            f"  background-color: {theme.COLOR_BG_SECONDARY};"
-            f"  color: {theme.COLOR_TEXT_PRIMARY};"
-            f"  border: 1px solid {theme.COLOR_BORDER};"
-            f"  border-radius: 5px;"
-            f"  padding: 0 8px;"
-            f"  font-size: {theme.FONT_SIZE_BASE}px;"
-            f"}}"
-            f"QSpinBox::up-button, QSpinBox::down-button {{"
-            f"  background-color: {theme.COLOR_BG_SECONDARY};"
-            f"  border: none;"
-            f"}}"
-        )
-
-        self._run_btn = QPushButton("Generar Informe")
+        # ── Boton Procesar ───────────────────────────────────────
+        self._run_btn = QPushButton("Procesar")
         self._run_btn.setFixedHeight(42)
         self._run_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._run_btn.setStyleSheet(
@@ -208,13 +143,11 @@ class ImagenesPage(QWidget):
         )
         self._run_btn.clicked.connect(self._run)
 
-        anio_run_row = QHBoxLayout()
-        anio_run_row.setSpacing(12)
-        anio_run_row.addWidget(self._anio_spin)
-        anio_run_row.addWidget(self._run_btn)
-        anio_run_row.addStretch()
-        root.addLayout(anio_run_row)
-        root.addSpacing(20)
+        run_row = QHBoxLayout()
+        run_row.addWidget(self._run_btn)
+        run_row.addStretch()
+        root.addLayout(run_row)
+        root.addSpacing(24)
 
         # ── Consola ──────────────────────────────────────────────
         root.addWidget(self._make_section_label("Consola"))
@@ -279,23 +212,6 @@ class ImagenesPage(QWidget):
         )
         return field
 
-    def _make_folder_row(self):
-        """Fila para seleccionar una CARPETA."""
-        field = self._make_path_field()
-
-        open_btn   = self._make_action_btn("Abrir carpeta")
-        select_btn = self._make_action_btn("Seleccionar carpeta")
-
-        open_btn.clicked.connect(lambda: self._open_folder(field))
-        select_btn.clicked.connect(lambda: self._select_folder(field))
-
-        row = QHBoxLayout()
-        row.setSpacing(8)
-        row.addWidget(field)
-        row.addWidget(open_btn)
-        row.addWidget(select_btn)
-        return field, row
-
     def _make_file_row(self, dialog_title: str, fallback_dir: Path):
         """Fila para seleccionar un ARCHIVO CSV."""
         field = self._make_path_field()
@@ -307,6 +223,23 @@ class ImagenesPage(QWidget):
         select_btn.clicked.connect(
             lambda: self._select_file(field, dialog_title, fallback_dir)
         )
+
+        row = QHBoxLayout()
+        row.setSpacing(8)
+        row.addWidget(field)
+        row.addWidget(open_btn)
+        row.addWidget(select_btn)
+        return field, row
+
+    def _make_folder_row(self):
+        """Fila para seleccionar una CARPETA (output)."""
+        field = self._make_path_field()
+
+        open_btn   = self._make_action_btn("Abrir carpeta")
+        select_btn = self._make_action_btn("Seleccionar carpeta")
+
+        open_btn.clicked.connect(lambda: self._open_folder(field))
+        select_btn.clicked.connect(lambda: self._select_folder(field))
 
         row = QHBoxLayout()
         row.setSpacing(8)
@@ -359,28 +292,13 @@ class ImagenesPage(QWidget):
     # ── Defaults ─────────────────────────────────────────────────
 
     def _set_defaults(self):
-        self._input_agendas_field.setText(str(DEFAULT_INPUT_AGENDAS))
-        self._input_fuera_field.setText(str(DEFAULT_INPUT_FUERA_AGENDA))
-        self._input_internacion_field.setText(str(DEFAULT_INPUT_INTERNACION))
-        self._input_imagenes_field.setText(str(DEFAULT_INPUT_IMAGENES))
-        self._mapeo_field.setText(str(DEFAULT_MAPEO_FILE))
+        eventos = archivo_mas_reciente(DEFAULT_EVENTOS_DIR)
+        vsr     = archivo_mas_reciente(DEFAULT_VSR_DIR)
+        self._eventos_field.setText(str(eventos) if eventos else "")
+        self._vsr_field.setText(str(vsr) if vsr else "")
         self._output_field.setText(str(DEFAULT_OUTPUT_PATH))
 
     # ── Acciones de archivo / carpeta ────────────────────────────
-
-    def _select_folder(self, field: QLineEdit):
-        path = QFileDialog.getExistingDirectory(
-            self, "Seleccionar carpeta", field.text().strip()
-        )
-        if path:
-            field.setText(str(Path(path)))
-
-    def _open_folder(self, field: QLineEdit):
-        path = field.text().strip()
-        if path:
-            p = Path(path)
-            p.mkdir(parents=True, exist_ok=True)
-            subprocess.Popen(f'explorer "{p}"')
 
     def _select_file(self, field: QLineEdit, title: str, fallback_dir: Path):
         current = field.text().strip()
@@ -399,32 +317,50 @@ class ImagenesPage(QWidget):
         else:
             self._log(f"  [ERROR] La carpeta no existe: {folder}")
 
+    def _select_folder(self, field: QLineEdit):
+        path = QFileDialog.getExistingDirectory(
+            self, "Seleccionar carpeta", field.text().strip()
+        )
+        if path:
+            field.setText(str(Path(path)))
+
+    def _open_folder(self, field: QLineEdit):
+        path = field.text().strip()
+        if path:
+            p = Path(path)
+            p.mkdir(parents=True, exist_ok=True)
+            subprocess.Popen(f'explorer "{p}"')
+
     # ── Ejecucion ────────────────────────────────────────────────
 
-    @staticmethod
-    def _path_or_none(text: str) -> Path | None:
-        text = text.strip()
-        return Path(text) if text else None
-
     def _run(self):
-        inp_ag    = self._path_or_none(self._input_agendas_field.text())
-        inp_fu    = self._path_or_none(self._input_fuera_field.text())
-        inp_inter = self._path_or_none(self._input_internacion_field.text())
-        inp_img   = self._path_or_none(self._input_imagenes_field.text())
-        mapeo     = self._path_or_none(self._mapeo_field.text())
-        out       = self._path_or_none(self._output_field.text())
-        anio      = self._anio_spin.value()
+        eventos_path = self._eventos_field.text().strip()
+        vsr_path     = self._vsr_field.text().strip()
+        output_path  = self._output_field.text().strip()
 
-        if not (inp_ag or inp_fu or inp_img):
-            self._log("  [ERROR] Debe especificar al menos una carpeta de entrada "
-                      "(Agendas, Fuera de agenda o Imágenes).")
+        if not eventos_path:
+            self._log("  [ERROR] Selecciona el archivo de eventos obstétricos.")
             return
-        if not out:
+        if not vsr_path:
+            self._log("  [ERROR] Selecciona el archivo de vacunas VSR.")
+            return
+        if not output_path:
             self._log("  [ERROR] Selecciona una carpeta de salida.")
             return
 
+        eventos = Path(eventos_path)
+        vsr     = Path(vsr_path)
+        out     = Path(output_path)
+
+        if not eventos.is_file():
+            self._log(f"  [ERROR] El archivo de eventos obstétricos no existe: {eventos}")
+            return
+        if not vsr.is_file():
+            self._log(f"  [ERROR] El archivo de vacunas VSR no existe: {vsr}")
+            return
+
         self._run_btn.setEnabled(False)
-        self._worker = _ImagenesWorker(inp_ag, inp_fu, inp_inter, inp_img, mapeo, out, anio)
+        self._worker = _PartosConVsrWorker(eventos, vsr, out)
         self._worker.log_signal.connect(self._log)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()

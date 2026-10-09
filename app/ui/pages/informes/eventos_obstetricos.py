@@ -75,15 +75,14 @@ class EventosObstetricosPage(QWidget):
         root.setSpacing(0)
 
         # Titulo
-        title = QLabel("Eventos Obstétricos")
+        title = QLabel("Panel de Obstetricia")
         title.setObjectName("page_title")
         root.addWidget(title)
         root.addSpacing(4)
 
         subtitle = QLabel(
-            "Genera el informe interactivo HTML de Eventos Obstétricos "
-            "(Partos, Nacidos Vivos, Prematurez y Seguimiento de Peso) "
-            "a partir de los registros normalizados de internación."
+            "Genera el Panel de Obstetricia (Partos, Nacidos Vivos, Prematurez y "
+            "Seguimiento de Peso) a partir de los registros normalizados de internación."
         )
         subtitle.setObjectName("page_subtitle")
         subtitle.setWordWrap(True)
