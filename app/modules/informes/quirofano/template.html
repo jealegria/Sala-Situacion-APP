@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quirófano HPN - Informe de Gestión</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --primary: #0284c7;
+            --secondary: #0f172a;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image: url('__FONDO_BASE64__');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 40px;
+            padding: 20px 0;
+            border-bottom: 2px solid var(--border);
+            width: 100%;
+            position: relative;
+        }
+
+        .header-info {
+            text-align: center;
+        }
+
+        .header-info h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            color: var(--secondary);
+            letter-spacing: -0.025em;
+            font-weight: 400;
+        }
+
+        .header-info p {
+            margin: 5px 0 0;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .chart-container-box {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-top: 20px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .selector-box select {
+            padding: 10px 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--secondary);
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .selector-box select:hover {
+            border-color: var(--primary);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 60px 0 25px;
+            color: var(--secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: rgba(2, 132, 199, 0.05);
+            border-left: 6px solid var(--primary);
+            border-radius: 0 12px 12px 0;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.02);
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05);
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .intro-box {
+            text-align: center;
+            font-size: 1rem;
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: #f0fdf4;
+            border-radius: 12px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .intro-box p {
+            margin-bottom: 15px;
+        }
+
+        .intro-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        .kpi-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+        }
+
+        .prog-card::before {
+            background: var(--primary);
+        }
+
+        .urg-card::before {
+            background: var(--danger);
+        }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .kpi-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+        }
+
+        .kpi-main-val {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--secondary);
+            line-height: 1;
+        }
+
+        .audit-section {
+            border-top: 1px solid var(--border);
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+
+        .audit-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .audit-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .audit-val {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .pct-badge {
+            background: #f0fdf4;
+            color: #166534;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        /* Table Styles */
+        .table-container {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05);
+            margin-top: 20px;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 10px;
+        }
+
+        th {
+            background: #f8fafc;
+            padding: 15px;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 15px;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #f1f5f9;
+            color: var(--text-main);
+        }
+
+        tr:hover td {
+            background: #fbfcfe;
+        }
+
+        tr.total-row td {
+            background: #f8fafc;
+            font-weight: 700;
+            border-top: 2px solid var(--border);
+            color: var(--secondary);
+        }
+
+        .n-cell {
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        .pct-cell {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .month-cell {
+            font-weight: 700;
+            color: var(--secondary);
+            width: 100px;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .badge-prog {
+            background: #e0f2fe;
+            color: var(--primary);
+        }
+
+        .badge-urg {
+            background: #fee2e2;
+            color: var(--danger);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <img src="__LOGO_BASE64__" alt="Logo HPN" style="max-height: 140px; margin-bottom: 20px;">
+            <div class="header-info">
+                <h1>Servicio de Quirófanos</h1>
+            </div>
+            <div style="margin-top: 10px; font-size: 0.9rem; color: var(--text-muted); text-align: center;">
+                Actualizado a: <span id="latestMonthLabel"></span>
+            </div>
+        </header>
+
+        <div class="intro-box">
+            <p>El monitoreo sistemático de las cirugías programadas y de urgencia tiene como objetivo aportar
+                información relevante para la planificación de recursos, la optimización de los procesos quirúrgicos y
+                el fortalecimiento de los sistemas de registro institucional.
+
+                El presente informe se realizó a partir del registro continuo de los Licenciados en
+                Enfermería mediante el formulario “Quirófanos Circulantes”.</p>
+        </div>
+
+
+
+        <div class="section-title">Frecuencia de cirugías registradas por mes, discriminado en urgencias y programadas
+        </div>
+        <div class="chart-container-box" style="max-width: 800px; height: 350px; margin-bottom: 30px;">
+            <canvas id="frequencyChart"></canvas>
+        </div>
+        <div id="tablesContainer"></div>
+
+
+
+        <div class="section-title">
+            <span>Total de cirugías realizadas, suspendidas y motivos de suspensión</span>
+            <div class="selector-box" style="margin-left: 20px; display: flex; gap: 10px;">
+                <select id="suspensionMonthSelect" onchange="updateSuspensionServiceFilterDropdown(); renderSuspensionTable();">
+                    <option value="Total">Año __ANIO__</option>
+                </select>
+                <select id="suspensionServiceSelect" onchange="renderSuspensionTable()">
+                    <option value="Todos">Todos los Servicios</option>
+                </select>
+            </div>
+        </div>
+        <div id="suspensionTableContainer"></div>
+
+        <div class="section-title">
+            <span>Cirugías realizadas por servicio</span>
+            <div class="selector-box" style="margin-left: 20px; display: flex; gap: 10px;">
+                <select id="servicesMonthSelect" onchange="updateServicesFilterDropdown(); renderServicesTable();">
+                    <option value="Total">Año __ANIO__</option>
+                </select>
+                <select id="servicesFilterSelect" onchange="renderServicesTable()">
+                    <option value="Todos">Todos los Servicios</option>
+                </select>
+            </div>
+        </div>
+        <div id="servicesTableContainer"></div>
+
+        <div class="section-title">
+            <span>Tipos de cirugías realizadas por método utilizado</span>
+            <div class="selector-box" style="margin-left: 20px;">
+                <select id="methodsMonthSelect" onchange="renderMethodsTable()">
+                    <option value="Total">Año __ANIO__</option>
+                </select>
+            </div>
+        </div>
+        <div id="methodsTableContainer"></div>
+        <div class="chart-container-box" style="max-width: 400px;">
+            <canvas id="methodsChart"></canvas>
+        </div>
+
+        <!-- SECCIÓN DE QUIRÓFANOS -->
+        <div class="section-title">
+            <span>Quirófanos más utilizados</span>
+            <div class="selector-box" style="margin-left: 20px;">
+                <select id="quirofanosMonthSelect" onchange="renderQuirofanosTable()">
+                    <option value="Total">Año __ANIO__</option>
+                </select>
+            </div>
+        </div>
+        <div id="quirofanosTableContainer" style="margin-bottom: 30px;"></div>
+
+        <!-- TÍTULO DE TIEMPOS -->
+        <div class="section-title">
+            <span>Promedio de Tiempos quirúrgicos (Minutos)</span>
+            <div class="selector-box" style="margin-left: 20px; display: flex; gap: 10px;">
+                <select id="timesMonthSelect" onchange="updateTimesServiceFilterDropdown(); renderTimingTable();">
+                    <option value="Total">Año __ANIO__</option>
+                </select>
+                <select id="timesServiceSelect" onchange="renderTimingTable()">
+                    <option value="Todos">Todos los Servicios</option>
+                </select>
+            </div>
+        </div>
+        <div class="intro-box" style="margin-top: 10px; margin-bottom: 20px; font-size: 0.95rem;">
+            <p>Tiempos quirúrgicos: promedios, mínimos, máximos y n° de cirugías con datos válidos.</p>
+        </div>
+
+        <!-- 1. AQUÍ ESTÁ LA TABLA DE TIEMPOS -->
+        <div id="timingTableContainer"></div>
+
+        <!-- 2. AQUÍ VA EL TEXTO DE DEFINICIONES (Debajo de la tabla) -->
+        <div class="intro-box" style="margin-top: 20px; margin-bottom: 20px; font-size: 0.9rem; text-align: left;">
+            <p style="margin-bottom: 8px;"><strong>Definiciones de Tiempos:</strong></p>
+            <ul style="margin-left: 20px; list-style-type: disc;">
+                <li><strong>Tiempo de espera del paciente en el bloque quirúrgico:</strong> Desde el ingreso al bloque
+                    quirúrgico hasta el inicio de la anestesia.</li>
+                <li><strong>Tiempo de cirugía:</strong> Desde inicio de la incisión hasta la finalización de la cirugía.
+                </li>
+                <li><strong>Duración del procedimiento quirúrgico:</strong> Desde la llegada al quirófano hasta la
+                    salida del paciente del quirófano.</li>
+            </ul>
+        </div>
+
+        <!-- 3. LUEGO VIENE EL GRÁFICO DE TORTA DE CALIDAD DE DATOS -->
+        <div class="chart-container-box" style="max-width: 600px; display: flex; align-items: center; gap: 20px;">
+            <div id="timingQualityText"
+                style="flex: 1; font-size: 1.1rem; color: var(--secondary); font-weight: 500; line-height: 1.4;"></div>
+            <div style="flex: 1; height: 250px;">
+                <canvas id="timingChart"></canvas>
+            </div>
+        </div>
+
+        <!-- CANTIDAD DE CIRUGÍAS SEGÚN HORA DEL DÍA -->
+        <div class="section-title">
+            <span>Cantidad de cirugías según hora del día</span>
+            <div class="selector-box" style="margin-left: 20px;">
+                <select id="hourlyMonthSelect" onchange="renderHourlyChart()">
+                    <option value="Total">Año __ANIO__</option>
+                </select>
+            </div>
+        </div>
+        <div class="chart-container-box" style="max-width: 800px; height: 350px; margin-bottom: 30px;">
+            <canvas id="hourlyChart"></canvas>
+        </div>
+
+        <div class="section-title">
+            <span>Ingreso del paciente al hospital para cirugía</span>
+            <div class="selector-box" style="margin-left: 20px;">
+                <select id="situMonthSelect" onchange="renderSituationTable()">
+                    <option value="Total">Año __ANIO__</option>
+                </select>
+            </div>
+        </div>
+        <div id="situTableContainer"></div>
+        <div class="chart-container-box">
+            <canvas id="situChart"></canvas>
+        </div>
+
+        <div class="section-title">
+            <span>Distribución por edad de la población operada</span>
+            <div class="selector-box" style="margin-left: 20px;">
+                <select id="demogMonthSelect" onchange="renderDemogTable()">
+                    <option value="Total">Año __ANIO__</option>
+                </select>
+            </div>
+        </div>
+        <div id="demogTableContainer"></div>
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; font-style: italic; line-height: 1.5;">
+            <p style="margin: 2px 0;">* Recién Nacido: Incluye pacientes con edad registrada en horas o primeros días.</p>
+            <p style="margin: 2px 0;">** Hay una diferencia con respecto al total de pacientes, ya que existen edades inválidas o nulas, que no se cuentan.</p>
+        </div>
+        <div class="chart-container-box" style="max-width: 800px; height: 500px;">
+            <canvas id="pyramidChart"></canvas>
+        </div>
+
+        <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Total Cirugías Registradas (Auditoría de Carga)</span>
+            <div class="selector-box">
+                <select id="monthSelect" onchange="updateDashboard()">
+                    <option value="Total">Total Histórico</option>
+                </select>
+            </div>
+        </div>
+        <div class="kpi-grid">
+            <!-- Programadas -->
+            <div class="kpi-card prog-card">
+                <div class="kpi-header">
+                    <span class="kpi-label">Programadas</span>
+                </div>
+                <div class="kpi-main-val" id="valProgClean">0</div>
+
+                <div class="audit-section">
+                    <div class="audit-info">
+                        <span class="audit-label">Registros cargados de un total de</span>
+                        <span class="audit-val" id="detProgReal">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Urgencias -->
+            <div class="kpi-card urg-card">
+                <div class="kpi-header">
+                    <span class="kpi-label">Urgencias</span>
+                </div>
+                <div class="kpi-main-val" id="valUrgClean">0</div>
+
+                <div class="audit-section">
+                    <div class="audit-info">
+                        <span class="audit-label">Registros cargados de un total de</span>
+                        <span class="audit-val" id="detUrgReal">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="intro-box" style="margin-top: 20px; font-size: 0.95rem;">
+            <p style="font-weight: 600; margin-bottom: 10px;">Los datos se compararon con dos bases
+                complementarias en formato Excel:</p>
+            <ol style="margin-left: 20px; color: var(--secondary);">
+                <li><strong>Base de cirugías de urgencia:</strong> Alimentada a través de formularios Google completados
+                    por los profesionales intervinientes.</li>
+                <li><strong>Base de cirugías programadas:</strong> Utilizada para la organización de los procedimientos
+                    por servicio, confeccionada con una planificación aproximada de quince días de anticipación.</li>
+            </ol>
+        </div>
+        
+        <!-- PIE DE PÁGINA -->
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; font-size: 0.85rem; color: var(--text-muted); font-style: italic; margin-bottom: 20px;">
+            Este informe fue confeccionado por el servicio de epidemiología HPN
+        </div>
+    </div>
+
+    <script>
+        const rawData = __DATA_JSON__;
+
+        function renderSuspensionTable() {
+            const container = document.getElementById('suspensionTableContainer');
+            const selectedMonth = document.getElementById('suspensionMonthSelect').value;
+            const selectedService = document.getElementById('suspensionServiceSelect').value;
+            const monthData = (selectedMonth === 'Total') ? rawData.suspension.Total : rawData.suspension.months[selectedMonth];
+
+            if (!monthData) return;
+
+            const d = monthData[selectedService];
+            if (!d) {
+                container.innerHTML = `
+                    <div class="table-container" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 20px;">
+                        No hay suficientes datos de suspensión para el servicio seleccionado en este período.
+                    </div>
+                `;
+                return;
+            }
+
+            const totalProg = d.total.prog_n;
+            const totalUrg = d.total.urg_n;
+            const totalGen = d.total.total_n;
+
+            const realProg = d.realizadas.prog_n;
+            const realUrg = d.realizadas.urg_n;
+            const realGen = d.realizadas.total_n;
+
+            const suspProg = totalProg - realProg;
+            const suspUrg = totalUrg - realUrg;
+            const suspGen = totalGen - realGen;
+
+            const realProgPct = d.realizadas.prog_pct;
+            const realUrgPct = d.realizadas.urg_pct;
+            const realGenPct = d.realizadas.total_pct;
+
+            const suspProgPct = totalProg > 0 ? parseFloat((suspProg / totalProg * 100).toFixed(1)) : 0;
+            const suspUrgPct = totalUrg > 0 ? parseFloat((suspUrg / totalUrg * 100).toFixed(1)) : 0;
+            const suspGenPct = totalGen > 0 ? parseFloat((suspGen / totalGen * 100).toFixed(1)) : 0;
+
+            let html = `
+                <div style="font-weight: 700; font-size: 1rem; color: var(--secondary); margin-bottom: 12px; margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+                    <span style="width: 4px; height: 16px; background-color: var(--primary); display: inline-block; border-radius: 2px;"></span>
+                    Cirugías realizadas y suspendidas
+                </div>
+                <div class="table-container" style="margin-bottom: 30px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Estado</th>
+                                <th colspan="2" style="text-align:center; border-left: 1px solid var(--border);">Programada</th>
+                                <th colspan="2" style="text-align:center; border-left: 1px solid var(--border);">Urgencia</th>
+                                <th colspan="2" style="text-align:center; border-left: 1px solid var(--border);">Total</th>
+                            </tr>
+                            <tr>
+                                <th></th>
+                                <th style="border-left: 1px solid var(--border);">n</th>
+                                <th>%</th>
+                                <th style="border-left: 1px solid var(--border);">n</th>
+                                <th>%</th>
+                                <th style="border-left: 1px solid var(--border);">n</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Realizadas</td>
+                                <td class="n-cell" style="border-left: 1px solid #f1f5f9;">${realProg}</td>
+                                <td class="pct-cell">${realProgPct}%</td>
+                                <td class="n-cell" style="border-left: 1px solid #f1f5f9;">${realUrg}</td>
+                                <td class="pct-cell">${realUrgPct}%</td>
+                                <td class="n-cell" style="border-left: 1px solid #f1f5f9;">${realGen}</td>
+                                <td class="pct-cell">${realGenPct}%</td>
+                            </tr>
+                            <tr>
+                                <td>Suspendidas</td>
+                                <td class="n-cell" style="border-left: 1px solid #f1f5f9; color: var(--danger);">${suspProg}</td>
+                                <td class="pct-cell" style="color: var(--danger);">${suspProgPct}%</td>
+                                <td class="n-cell" style="border-left: 1px solid #f1f5f9; color: var(--danger);">${suspUrg}</td>
+                                <td class="pct-cell" style="color: var(--danger);">${suspUrgPct}%</td>
+                                <td class="n-cell" style="border-left: 1px solid #f1f5f9; color: var(--danger);">${suspGen}</td>
+                                <td class="pct-cell" style="color: var(--danger);">${suspGenPct}%</td>
+                            </tr>
+                            <tr class="total-row">
+                                <td class="month-cell">Total Registrado</td>
+                                <td class="n-cell" style="border-left: 1px solid var(--border);">${totalProg}</td>
+                                <td class="pct-cell">100%</td>
+                                <td class="n-cell" style="border-left: 1px solid var(--border);">${totalUrg}</td>
+                                <td class="pct-cell">100%</td>
+                                <td class="n-cell" style="border-left: 1px solid var(--border);">${totalGen}</td>
+                                <td class="pct-cell">100%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="font-weight: 700; font-size: 1rem; color: var(--secondary); margin-bottom: 12px; margin-top: 20px; display: flex; align-items: center; gap: 8px;">
+                    <span style="width: 4px; height: 16px; background-color: var(--danger); display: inline-block; border-radius: 2px;"></span>
+                    Motivos de Suspensión
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Motivo de Suspensión</th>
+                                <th colspan="2" style="text-align:center; border-left: 1px solid var(--border);">Programada</th>
+                                <th colspan="2" style="text-align:center; border-left: 1px solid var(--border);">Urgencia</th>
+                                <th colspan="2" style="text-align:center; border-left: 1px solid var(--border);">Total</th>
+                            </tr>
+                            <tr>
+                                <th></th>
+                                <th style="border-left: 1px solid var(--border);">n</th>
+                                <th>%</th>
+                                <th style="border-left: 1px solid var(--border);">n</th>
+                                <th>%</th>
+                                <th style="border-left: 1px solid var(--border);">n</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            const reasons = Object.keys(d.reasons).sort((a, b) => d.reasons[b].total_n - d.reasons[a].total_n);
+
+            if (reasons.length === 0 || suspGen === 0) {
+                html += `
+                            <tr>
+                                <td colspan="7" style="text-align:center; color: var(--text-muted); font-style: italic; padding: 20px;">No se registraron cirugías suspendidas en este período</td>
+                            </tr>
+                `;
+            } else {
+                reasons.forEach(r => {
+                    const row = d.reasons[r];
+                    const rProgPct = suspProg > 0 ? ((row.prog_n / suspProg) * 100).toFixed(1) : '0.0';
+                    const rUrgPct = suspUrg > 0 ? ((row.urg_n / suspUrg) * 100).toFixed(1) : '0.0';
+                    const rTotalPct = suspGen > 0 ? ((row.total_n / suspGen) * 100).toFixed(1) : '0.0';
+
+                    html += `
+                        <tr>
+                            <td>${r}</td>
+                            <td class="n-cell" style="border-left: 1px solid #f1f5f9;">${row.prog_n}</td>
+                            <td class="pct-cell">${rProgPct}%</td>
+                            <td class="n-cell" style="border-left: 1px solid #f1f5f9;">${row.urg_n}</td>
+                            <td class="pct-cell">${rUrgPct}%</td>
+                            <td class="n-cell" style="border-left: 1px solid #f1f5f9;">${row.total_n}</td>
+                            <td class="pct-cell">${rTotalPct}%</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            html += `
+                            <tr class="total-row">
+                                <td class="month-cell">Total Suspendidas</td>
+                                <td class="n-cell" style="border-left: 1px solid var(--border); color: var(--danger);">${suspProg}</td>
+                                <td class="pct-cell" style="color: var(--danger);">100%</td>
+                                <td class="n-cell" style="border-left: 1px solid var(--border); color: var(--danger);">${suspUrg}</td>
+                                <td class="pct-cell" style="color: var(--danger);">100%</td>
+                                <td class="n-cell" style="border-left: 1px solid var(--border); color: var(--danger);">${suspGen}</td>
+                                <td class="pct-cell" style="color: var(--danger);">100%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        function renderTables() {
+            const container = document.getElementById('tablesContainer');
+            const years = Object.keys(rawData.stats).sort().reverse();
+            const monthNames = { "01": "Ene", "02": "Feb", "03": "Mar", "04": "Abr", "05": "May", "06": "Jun", "07": "Jul", "08": "Ago", "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dic" };
+
+            years.forEach(year => {
+                const yearData = rawData.stats[year];
+                let html = `
+                    <div class="table-container" style="margin-bottom: 40px;">
+                        <h3 style="margin-top:0; color: var(--secondary); display:flex; align-items:center; gap:10px;">
+                            <span class="badge badge-prog" style="font-size: 1rem; padding: 6px 12px;">${year}</span>
+                        </h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mes</th>
+                                    <th colspan="2" style="text-align:center; border-left: 1px solid var(--border);">Programada</th>
+                                    <th colspan="2" style="text-align:center; border-left: 1px solid var(--border);">Urgencia</th>
+                                    <th colspan="2" style="text-align:center; border-left: 1px solid var(--border);">Total</th>
+                                </tr>
+                                <tr>
+                                    <th></th>
+                                    <th style="border-left: 1px solid var(--border);">n</th>
+                                    <th>%</th>
+                                    <th style="border-left: 1px solid var(--border);">n</th>
+                                    <th>%</th>
+                                    <th style="border-left: 1px solid var(--border);">n</th>
+                                    <th>%</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                const months = Object.keys(yearData.months).sort();
+                months.forEach(m => {
+                    const d = yearData.months[m];
+                    html += `
+                        <tr>
+                            <td class="month-cell">${monthNames[m]}</td>
+                            <td class="n-cell" style="border-left: 1px solid #f1f5f9;">${d.prog_n}</td>
+                            <td class="pct-cell">${d.prog_pct}%</td>
+                            <td class="n-cell" style="border-left: 1px solid #f1f5f9;">${d.urg_n}</td>
+                            <td class="pct-cell">${d.urg_pct}%</td>
+                            <td class="n-cell" style="border-left: 1px solid #f1f5f9;">${d.total_n}</td>
+                            <td class="pct-cell">100%</td>
+                        </tr>
+                    `;
+                });
+
+                const t = yearData.total;
+                html += `
+                        <tr class="total-row">
+                            <td class="month-cell">Total</td>
+                            <td class="n-cell" style="border-left: 1px solid var(--border);">${t.prog_n}</td>
+                            <td class="pct-cell">${t.prog_pct}%</td>
+                            <td class="n-cell" style="border-left: 1px solid var(--border);">${t.urg_n}</td>
+                            <td class="pct-cell">${t.urg_pct}%</td>
+                            <td class="n-cell" style="border-left: 1px solid var(--border);">${t.total_n}</td>
+                            <td class="pct-cell">100%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>`;
+                container.innerHTML += html;
+            });
+        }
+
+        let frequencyChartInstance = null;
+        function renderFrequencyChart() {
+            const ctx = document.getElementById('frequencyChart').getContext('2d');
+            if (frequencyChartInstance) frequencyChartInstance.destroy();
+
+            // Usamos el año más reciente de stats
+            const years = Object.keys(rawData.stats).sort().reverse();
+            if (years.length === 0) return;
+
+            const year = years[0];
+            const yearData = rawData.stats[year];
+            const months = Object.keys(yearData.months).sort();
+            const monthNamesShort = { "01": "Ene", "02": "Feb", "03": "Mar", "04": "Abr", "05": "May", "06": "Jun", "07": "Jul", "08": "Ago", "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dic" };
+
+            const labels = months.map(m => monthNamesShort[m]);
+            const progData = months.map(m => yearData.months[m].prog_n);
+            const urgData = months.map(m => yearData.months[m].urg_n);
+            const totalData = months.map(m => yearData.months[m].total_n);
+
+            frequencyChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Programadas',
+                            data: progData,
+                            backgroundColor: '#0284c7',
+                            stack: 'combined'
+                        },
+                        {
+                            label: 'Urgencias',
+                            data: urgData,
+                            backgroundColor: '#ef4444',
+                            stack: 'combined'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            title: { display: true, text: 'Cantidad de Cirugías' }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: { mode: 'index', intersect: false }
+                    }
+                }
+            });
+        }
+
+        function updateServicesFilterDropdown() {
+            const monthSelected = document.getElementById('servicesMonthSelect').value;
+            const filterSelect = document.getElementById('servicesFilterSelect');
+            
+            // Guardar la especialidad actualmente seleccionada si existe
+            const currentSelected = filterSelect.value;
+            
+            // Limpiar opciones manteniendo "Todos los Servicios"
+            filterSelect.innerHTML = '<option value="Todos">Todos los Servicios</option>';
+            
+            // Forzar origen de datos a Mapeo 2 (services_v2)
+            const source = rawData.services_v2;
+            const data = (monthSelected === 'Total') ? source.Total : source.months[monthSelected];
+            
+            if (!data) return;
+            
+            // Obtener lista de servicios únicos ordenados alfabéticamente
+            const services = Object.keys(data).sort();
+            services.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = s;
+                filterSelect.appendChild(opt);
+            });
+            
+            // Intentar restaurar la selección anterior si aún existe en el nuevo set de datos
+            if (services.includes(currentSelected)) {
+                filterSelect.value = currentSelected;
+            }
+        }
+
+        function updateTimesServiceFilterDropdown() {
+            const monthSelected = document.getElementById('timesMonthSelect').value;
+            const filterSelect = document.getElementById('timesServiceSelect');
+            
+            // Guardar la especialidad actualmente seleccionada si existe
+            const currentSelected = filterSelect.value;
+            
+            // Limpiar opciones manteniendo "Todos los Servicios"
+            filterSelect.innerHTML = '<option value="Todos">Todos los Servicios</option>';
+            
+            // Usar rawData.services_v2 como fuente de servicios disponibles
+            const source = rawData.services_v2;
+            const data = (monthSelected === 'Total') ? source.Total : source.months[monthSelected];
+            
+            if (!data) return;
+            
+            // Obtener lista de servicios únicos ordenados alfabéticamente
+            const services = Object.keys(data).sort();
+            services.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = s;
+                filterSelect.appendChild(opt);
+            });
+            
+            // Intentar restaurar la selección anterior si aún existe en el nuevo set de datos
+            if (services.includes(currentSelected)) {
+                filterSelect.value = currentSelected;
+            }
+        }
+
+        function updateSuspensionServiceFilterDropdown() {
+            const monthSelected = document.getElementById('suspensionMonthSelect').value;
+            const filterSelect = document.getElementById('suspensionServiceSelect');
+            
+            // Guardar la especialidad actualmente seleccionada si existe
+            const currentSelected = filterSelect.value;
+            
+            // Limpiar opciones manteniendo "Todos los Servicios"
+            filterSelect.innerHTML = '<option value="Todos">Todos los Servicios</option>';
+            
+            // Usar rawData.services_v2 como fuente de servicios disponibles
+            const source = rawData.services_v2;
+            const data = (monthSelected === 'Total') ? source.Total : source.months[monthSelected];
+            
+            if (!data) return;
+            
+            // Obtener lista de servicios únicos ordenados alfabéticamente
+            const services = Object.keys(data).sort();
+            services.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = s;
+                filterSelect.appendChild(opt);
+            });
+            
+            // Intentar restaurar la selección anterior si aún existe en el nuevo set de datos
+            if (services.includes(currentSelected)) {
+                filterSelect.value = currentSelected;
+            }
+        }
+
+
+        function renderServicesTable() {
+            const container = document.getElementById('servicesTableContainer');
+            const monthSelected = document.getElementById('servicesMonthSelect').value;
+            const filterSelected = document.getElementById('servicesFilterSelect').value;
+
+            // Forzar origen de datos a Mapeo 2 (services_v2)
+            const source = rawData.services_v2;
+            const d = (monthSelected === 'Total') ? source.Total : source.months[monthSelected];
+
+            if (!d) return;
+
+            let html = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Servicio</th>
+                                <th style="text-align:center;">Individual</th>
+                                <th style="text-align:center;">Compartida</th>
+                                <th style="text-align:center; background: #f8fafc;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            // Filtrar servicios
+            let services = Object.keys(d);
+            if (filterSelected !== 'Todos') {
+                services = services.filter(s => s === filterSelected);
+            }
+
+            // Ordenar por total descendente
+            services.sort((a, b) => (d[b].indiv + d[b].comp) - (d[a].indiv + d[a].comp));
+
+            services.forEach(s => {
+                const row = d[s];
+                html += `
+                    <tr>
+                        <td class="month-cell">${s}</td>
+                        <td style="text-align:center;">${row.indiv}</td>
+                        <td style="text-align:center;">${row.comp}</td>
+                        <td style="text-align:center; font-weight:700; background: #fbfcfe;">${row.indiv + row.comp}</td>
+                    </tr>
+                `;
+            });
+
+            // Se cierra la tabla directamente, sin la fila de totales
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        function renderMethodsTable() {
+            const container = document.getElementById('methodsTableContainer');
+            const selected = document.getElementById('methodsMonthSelect').value;
+            const d = (selected === 'Total') ? rawData.methods.Total : rawData.methods.months[selected];
+
+            if (!d) return;
+
+            let html = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Método</th>
+                                <th colspan="2" style="text-align:center; border-left: 1px solid var(--border);">Programada</th>
+                                <th colspan="2" style="text-align:center; border-left: 1px solid var(--border);">Urgencia</th>
+                                <th colspan="2" style="text-align:center; border-left: 1px solid var(--border);">Total</th>
+                            </tr>
+                            <tr>
+                                <th></th>
+                                <th style="border-left: 1px solid var(--border);">n</th>
+                                <th>%</th>
+                                <th style="border-left: 1px solid var(--border);">n</th>
+                                <th>%</th>
+                                <th style="border-left: 1px solid var(--border);">n</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            const methods = Object.keys(d.data).sort((a, b) => d.data[b].total_n - d.data[a].total_n);
+            methods.forEach(m => {
+                const row = d.data[m];
+                html += `
+                    <tr>
+                        <td class="month-cell">${m}</td>
+                        <td class="n-cell" style="border-left: 1px solid #f1f5f9;">${row.prog_n}</td>
+                        <td class="pct-cell">${row.prog_pct}%</td>
+                        <td class="n-cell" style="border-left: 1px solid #f1f5f9;">${row.urg_n}</td>
+                        <td class="pct-cell">${row.urg_pct}%</td>
+                        <td class="n-cell" style="border-left: 1px solid #f1f5f9;">${row.total_n}</td>
+                        <td class="pct-cell">${row.total_pct}%</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        <tr class="total-row">
+                            <td class="month-cell">Total General</td>
+                            <td class="n-cell" style="border-left: 1px solid var(--border);">${d.total.prog_n}</td>
+                            <td class="pct-cell">100%</td>
+                            <td class="n-cell" style="border-left: 1px solid var(--border);">${d.total.urg_n}</td>
+                            <td class="pct-cell">100%</td>
+                            <td class="n-cell" style="border-left: 1px solid var(--border);">${d.total.total_n}</td>
+                            <td class="pct-cell">100%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            `;
+            container.innerHTML = html;
+            updateMethodsChart(d.data);
+        }
+
+        let methodsChartInstance = null;
+        function updateMethodsChart(data) {
+            const ctx = document.getElementById('methodsChart').getContext('2d');
+
+            // Procesar Top 4 + Otros
+            const sorted = Object.keys(data).sort((a, b) => data[b].total_n - data[a].total_n);
+            const top4Keys = sorted.slice(0, 4);
+            const otherKeys = sorted.slice(4);
+
+            const labels = [...top4Keys];
+            const values = top4Keys.map(k => data[k].total_n);
+
+            if (otherKeys.length > 0) {
+                labels.push('Otros');
+                values.push(otherKeys.reduce((acc, k) => acc + data[k].total_n, 0));
+            }
+
+            if (methodsChartInstance) methodsChartInstance.destroy();
+
+            methodsChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: [
+                            '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        title: { display: true, text: 'Distribución por Método' }
+                    }
+                }
+            });
+        }
+
+        function renderQuirofanosTable() {
+            const container = document.getElementById('quirofanosTableContainer');
+            const selected = document.getElementById('quirofanosMonthSelect').value;
+            const d = (selected === 'Total') ? rawData.quirofanos.Total : rawData.quirofanos.months[selected];
+
+            if (!d) return;
+
+            let html = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Quirófano</th>
+                                <th colspan="2" style="text-align:center; border-left: 1px solid var(--border);">Programada</th>
+                                <th colspan="2" style="text-align:center; border-left: 1px solid var(--border);">Urgencia</th>
+                                <th colspan="2" style="text-align:center; border-left: 1px solid var(--border);">Total</th>
+                            </tr>
+                            <tr>
+                                <th></th>
+                                <th style="border-left: 1px solid var(--border);">n</th>
+                                <th>%</th>
+                                <th style="border-left: 1px solid var(--border);">n</th>
+                                <th>%</th>
+                                <th style="border-left: 1px solid var(--border);">n</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            const roomsOrder = ["1", "2", "3", "4", "5", "Otros"];
+            
+            roomsOrder.forEach(q => {
+                const row = d.data[q];
+                if (!row) return;
+                html += `
+                    <tr>
+                        <td class="month-cell">${q === 'Otros' ? 'Otros' : 'Quirófano ' + q}</td>
+                        <td class="n-cell" style="border-left: 1px solid #f1f5f9;">${row.prog_n}</td>
+                        <td class="pct-cell">${row.prog_pct}%</td>
+                        <td class="n-cell" style="border-left: 1px solid #f1f5f9;">${row.urg_n}</td>
+                        <td class="pct-cell">${row.urg_pct}%</td>
+                        <td class="n-cell" style="border-left: 1px solid #f1f5f9;">${row.total_n}</td>
+                        <td class="pct-cell">${row.total_pct}%</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        <tr class="total-row">
+                            <td class="month-cell">Total General</td>
+                            <td class="n-cell" style="border-left: 1px solid var(--border);">${d.total.prog_n}</td>
+                            <td class="pct-cell">100%</td>
+                            <td class="n-cell" style="border-left: 1px solid var(--border);">${d.total.urg_n}</td>
+                            <td class="pct-cell">100%</td>
+                            <td class="n-cell" style="border-left: 1px solid var(--border);">${d.total.total_n}</td>
+                            <td class="pct-cell">100%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        function renderTimingTable() {
+            const container = document.getElementById('timingTableContainer');
+            const selectedMonth = document.getElementById('timesMonthSelect').value;
+            const selectedService = document.getElementById('timesServiceSelect').value;
+            const monthData = (selectedMonth === 'Total') ? rawData.times.Total : rawData.times.months[selectedMonth];
+
+            if (!monthData) return;
+
+            const d = monthData[selectedService];
+            if (!d) {
+                container.innerHTML = `
+                    <div class="table-container" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 20px;">
+                        No hay suficientes datos válidos para el servicio seleccionado en este período.
+                    </div>
+                `;
+                document.getElementById('timingQualityText').innerHTML = `No hay registros procesados para este servicio.`;
+                updateTimingChart({valid_n: 0, invalid_n: 0});
+                return;
+            }
+
+            let html = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Dimensión</th>
+                                <th style="text-align:center;">Promedio</th>
+                                <th style="text-align:center;">MIN</th>
+                                <th style="text-align:center;">MAX</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            const labels = ["Espera del paciente", "Tiempo de cirugía", "Duración procedimiento"];
+            labels.forEach(l => {
+                const row = d.stats[l];
+                html += `
+                    <tr>
+                        <td class="month-cell">${l}</td>
+                        <td style="text-align:center; font-weight:700;">${row.avg} <small>min</small></td>
+                        <td style="text-align:center;">${row.min} <small>min</small></td>
+                        <td style="text-align:center;">${row.max} <small>min</small></td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            container.innerHTML = html;
+
+            // Texto descriptivo de calidad
+            const total = d.quality.valid_n + d.quality.invalid_n;
+            const pctErr = (total > 0) ? ((d.quality.invalid_n / total) * 100).toFixed(1) : 0;
+            const qualityText = `De <span style="color:var(--primary); font-weight:700;">${total}</span> registros procesados, <span style="color:#ef4444; font-weight:700;">${d.quality.invalid_n}</span> (${pctErr}%) contienen datos inválidos o incoherentes.`;
+            document.getElementById('timingQualityText').innerHTML = qualityText;
+
+            updateTimingChart(d.quality);
+        }
+
+        let timingChartInstance = null;
+        function updateTimingChart(quality) {
+            const ctx = document.getElementById('timingChart').getContext('2d');
+            if (timingChartInstance) timingChartInstance.destroy();
+
+            timingChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Válidos', 'Inválidos/Faltantes'],
+                    datasets: [{
+                        data: [quality.valid_n, quality.invalid_n],
+                        backgroundColor: ['#10b981', '#ef4444'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        title: { display: true, text: 'Calidad de Datos (Tiempos)' }
+                    }
+                }
+            });
+        }
+
+        let hourlyChartInstance = null;
+        function renderHourlyChart() {
+            const ctx = document.getElementById('hourlyChart').getContext('2d');
+            const selected = document.getElementById('hourlyMonthSelect').value;
+            const d = (selected === 'Total') ? rawData.hourly.Total : rawData.hourly.months[selected];
+            
+            if (!d) return;
+            
+            const labels = Object.keys(d);
+            const values = Object.values(d);
+            
+            if (hourlyChartInstance) hourlyChartInstance.destroy();
+            
+            hourlyChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Cantidad de cirugías',
+                        data: values,
+                        borderColor: '#0284c7',
+                        backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#0284c7'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            },
+                            title: { display: true, text: 'Cantidad de cirugías' }
+                        },
+                        x: {
+                            title: { display: true, text: 'Hora del día' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { mode: 'index', intersect: false }
+                    }
+                }
+            });
+        }
+
+        function renderSituationTable() {
+            const container = document.getElementById('situTableContainer');
+            const selected = document.getElementById('situMonthSelect').value;
+            const d = (selected === 'Total') ? rawData.situations.Total : rawData.situations.months[selected];
+
+            if (!d) return;
+
+            let html = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Situación</th>
+                                <th colspan="2" style="text-align:center; border-left: 1px solid var(--border);">Programada</th>
+                                <th colspan="2" style="text-align:center; border-left: 1px solid var(--border);">Urgencia</th>
+                                <th colspan="2" style="text-align:center; border-left: 1px solid var(--border);">Total</th>
+                            </tr>
+                            <tr>
+                                <th></th>
+                                <th style="border-left: 1px solid var(--border);">n</th>
+                                <th>%</th>
+                                <th style="border-left: 1px solid var(--border);">n</th>
+                                <th>%</th>
+                                <th style="border-left: 1px solid var(--border);">n</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            const situList = ["Internado", "Ambulatorio", "Guardia Adultos", "Guardia Pediatría", "Hospital de Día", "Otros"];
+            situList.forEach(s => {
+                const row = d.data[s];
+                if (!row) return;
+                html += `
+                    <tr>
+                        <td class="month-cell">${s}</td>
+                        <td class="n-cell" style="border-left: 1px solid #f1f5f9;">${row.prog_n}</td>
+                        <td class="pct-cell">${row.prog_pct}%</td>
+                        <td class="n-cell" style="border-left: 1px solid #f1f5f9;">${row.urg_n}</td>
+                        <td class="pct-cell">${row.urg_pct}%</td>
+                        <td class="n-cell" style="border-left: 1px solid #f1f5f9;">${row.total_n}</td>
+                        <td class="pct-cell">${row.total_pct}%</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        <tr class="total-row">
+                            <td class="month-cell">Total General</td>
+                            <td class="n-cell" style="border-left: 1px solid var(--border);">${d.total.prog_n}</td>
+                            <td class="pct-cell">100%</td>
+                            <td class="n-cell" style="border-left: 1px solid var(--border);">${d.total.urg_n}</td>
+                            <td class="pct-cell">100%</td>
+                            <td class="n-cell" style="border-left: 1px solid var(--border);">${d.total.total_n}</td>
+                            <td class="pct-cell">100%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            `;
+            container.innerHTML = html;
+            updateSituationChart(d.data);
+        }
+
+        let situChartInstance = null;
+        function updateSituationChart(data) {
+            const ctx = document.getElementById('situChart').getContext('2d');
+            if (situChartInstance) situChartInstance.destroy();
+
+            const labels = Object.keys(data).filter(k => data[k].total_n > 0);
+            const values = labels.map(k => data[k].total_n);
+
+            situChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#94a3b8'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        title: { display: true, text: 'Origen de Pacientes' }
+                    }
+                }
+            });
+        }
+
+        function renderDemogTable() {
+            const container = document.getElementById('demogTableContainer');
+            const selected = document.getElementById('demogMonthSelect').value;
+            const d = (selected === 'Total') ? rawData.demographics.Total : rawData.demographics.months[selected];
+
+            if (!d) return;
+
+            let html = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rango de Edad</th>
+                                <th style="text-align:center;">Femenino</th>
+                                <th style="text-align:center;">Masculino</th>
+                                <th style="text-align:center;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            const groups = [
+                "Recién Nacido", "Menor a 1 año", "1-4", "5-9", "10-14", "15-19",
+                "20-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80-89", ">= 90"
+            ];
+
+            let tFem = 0, tMasc = 0;
+            groups.forEach(g => {
+                const row = d[g];
+                const total = row.Femenino + row.Masculino;
+                tFem += row.Femenino; tMasc += row.Masculino;
+                html += `
+                    <tr>
+                        <td class="month-cell">${g === "Recién Nacido" ? "Recién Nacido*" : g}</td>
+                        <td style="text-align:center;">${row.Femenino}</td>
+                        <td style="text-align:center;">${row.Masculino}</td>
+                        <td style="text-align:center; font-weight:700;">${total}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        <tr class="total-row">
+                            <td class="month-cell">Total General</td>
+                            <td style="text-align:center;">${tFem}</td>
+                            <td style="text-align:center;">${tMasc}</td>
+                            <td style="text-align:center;">${tFem + tMasc} **</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            `;
+            container.innerHTML = html;
+            updatePyramidChart(d);
+        }
+
+        let pyramidChartInstance = null;
+        function updatePyramidChart(data) {
+            const ctx = document.getElementById('pyramidChart').getContext('2d');
+            if (pyramidChartInstance) pyramidChartInstance.destroy();
+
+            const groups = [
+                "Recién Nacido", "Menor a 1 año", "1-4", "5-9", "10-14", "15-19",
+                "20-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80-89", ">= 90"
+            ].reverse(); // De mayor a menor para la base de la pirámide
+
+            const femData = groups.map(g => data[g].Femenino);
+            const mascData = groups.map(g => -data[g].Masculino); // Negativo para el lado izquierdo
+
+            pyramidChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: groups,
+                    datasets: [
+                        {
+                            label: 'Masculino',
+                            data: mascData,
+                            backgroundColor: '#3b82f6',
+                            stack: 'Stack 0',
+                        },
+                        {
+                            label: 'Femenino',
+                            data: femData,
+                            backgroundColor: '#ec4899',
+                            stack: 'Stack 0',
+                        }
+                    ]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            ticks: {
+                                callback: (v) => Math.abs(v)
+                            },
+                            title: { display: true, text: 'Cantidad de Pacientes' }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: (c) => `${c.dataset.label}: ${Math.abs(c.raw)}`
+                            }
+                        },
+                        title: { display: true, text: 'Pirámide de Población' }
+                    }
+                }
+            });
+        }
+
+        function init() {
+            const selector = document.getElementById('monthSelect');
+            const suspSelector = document.getElementById('suspensionMonthSelect');
+            const servSelector = document.getElementById('servicesMonthSelect');
+            const methSelector = document.getElementById('methodsMonthSelect');
+            const quirofanoSelector = document.getElementById('quirofanosMonthSelect');
+            const timeSelector = document.getElementById('timesMonthSelect');
+            const hourlySelector = document.getElementById('hourlyMonthSelect');
+            const situSelector = document.getElementById('situMonthSelect');
+            const demogSelector = document.getElementById('demogMonthSelect');
+
+            const monthNamesFull = {
+                "01": "Enero", "02": "Febrero", "03": "Marzo", "04": "Abril",
+                "05": "Mayo", "06": "Junio", "07": "Julio", "08": "Agosto",
+                "09": "Septiembre", "10": "Octubre", "11": "Noviembre", "12": "Diciembre"
+            };
+
+            const months = Object.keys(rawData.months).sort().reverse();
+            months.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m;
+                opt.textContent = rawData.months[m].label;
+                selector.appendChild(opt);
+
+                if (rawData.suspension.months[m]) {
+                    const optS = document.createElement('option');
+                    optS.value = m;
+                    const [y, mon] = m.split("-");
+                    optS.textContent = `${monthNamesFull[mon]} ${y}`;
+                    suspSelector.appendChild(optS);
+                }
+
+                if (rawData.services.months[m]) {
+                    const optSv = document.createElement('option');
+                    optSv.value = m;
+                    const [y, mon] = m.split("-");
+                    optSv.textContent = `${monthNamesFull[mon]} ${y}`;
+                    servSelector.appendChild(optSv);
+                }
+
+                if (rawData.methods.months[m]) {
+                    const optM = document.createElement('option');
+                    optM.value = m;
+                    const [y, mon] = m.split("-");
+                    optM.textContent = `${monthNamesFull[mon]} ${y}`;
+                    methSelector.appendChild(optM);
+                }
+
+                if (rawData.quirofanos.months[m]) {
+                    const optQ = document.createElement('option');
+                    optQ.value = m;
+                    const [y, mon] = m.split("-");
+                    optQ.textContent = `${monthNamesFull[mon]} ${y}`;
+                    quirofanoSelector.appendChild(optQ);
+                }
+
+                if (rawData.times.months[m]) {
+                    const optT = document.createElement('option');
+                    optT.value = m;
+                    const [y, mon] = m.split("-");
+                    optT.textContent = `${monthNamesFull[mon]} ${y}`;
+                    timeSelector.appendChild(optT);
+                }
+
+                if (rawData.hourly.months[m]) {
+                    const optH = document.createElement('option');
+                    optH.value = m;
+                    const [y, mon] = m.split("-");
+                    optH.textContent = `${monthNamesFull[mon]} ${y}`;
+                    hourlySelector.appendChild(optH);
+                }
+
+                if (rawData.situations.months[m]) {
+                    const optSi = document.createElement('option');
+                    optSi.value = m;
+                    const [y, mon] = m.split("-");
+                    optSi.textContent = `${monthNamesFull[mon]} ${y}`;
+                    situSelector.appendChild(optSi);
+                }
+
+                if (rawData.demographics.months[m]) {
+                    const optD = document.createElement('option');
+                    optD.value = m;
+                    const [y, mon] = m.split("-");
+                    optD.textContent = `${monthNamesFull[mon]} ${y}`;
+                    demogSelector.appendChild(optD);
+                }
+            });
+            updateServicesFilterDropdown();
+            updateTimesServiceFilterDropdown();
+            updateSuspensionServiceFilterDropdown();
+            renderTables();
+            renderFrequencyChart();
+            renderSuspensionTable();
+            renderServicesTable();
+            renderMethodsTable();
+            renderQuirofanosTable();
+            renderTimingTable();
+            renderHourlyChart();
+            renderSituationTable();
+            renderDemogTable();
+            document.getElementById('latestMonthLabel').textContent = rawData.latest_month;
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            const selected = document.getElementById('monthSelect').value;
+            let d = (selected === 'Total') ? rawData['Total'] : rawData.months[selected];
+            if (!d) return;
+
+            document.getElementById('valProgClean').textContent = d.prog.cargadas.toLocaleString();
+            document.getElementById('valUrgClean').textContent = d.urg.cargadas.toLocaleString();
+
+            document.getElementById('detProgReal').textContent = d.prog.total.toLocaleString();
+            document.getElementById('detUrgReal').textContent = d.urg.total.toLocaleString();
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

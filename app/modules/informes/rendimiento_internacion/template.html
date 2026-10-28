@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rendimiento Internación - HPN __ANIO__</title>
+
+<!-- Chart.js y DataLabels -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
+<style>
+:root {
+    --primary: #1d4f7a;
+    --primary-light: #2c73ad;
+    --primary-bg: #eaf2f8;
+    --dark: #1e293b;
+    --gray-bg: #f8fafc;
+    --card-bg: #ffffff;
+    --border: #e2e8f0;
+    --text-muted: #64748b;
+    --danger: #dc2626;
+    --success: #16a34a;
+    --warning: #f59e0b;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #f1f5f9;
+    color: var(--dark);
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 1280px;
+}
+
+/* Header */
+.header-box {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.header-box h1 {
+    color: var(--primary);
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+}
+
+.header-box .subtitle {
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Panel de Filtros */
+.filter-panel {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -2px rgba(0,0,0,0.06);
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 220px;
+}
+
+.filter-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filter-group select {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background-color: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--dark);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.filter-group select:focus {
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(44, 115, 173, 0.15);
+}
+
+/* Grid de KPIs */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.kpi-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 18px 20px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -2px rgba(0,0,0,0.06);
+    border-top: 4px solid var(--primary);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.kpi-card.highlight {
+    border-top-color: #2563eb;
+    background: linear-gradient(to bottom, #ffffff, #f0f7ff);
+}
+
+.kpi-card.warning {
+    border-top-color: var(--warning);
+}
+
+.kpi-card.danger {
+    border-top-color: var(--danger);
+}
+
+.kpi-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.kpi-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--dark);
+}
+
+.kpi-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    font-weight: 500;
+}
+
+/* Gráficos */
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.chart-card.full-width {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 768px) {
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.chart-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 22px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -2px rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-header {
+    margin-bottom: 16px;
+}
+
+.chart-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.chart-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.chart-container {
+    position: relative;
+    flex: 1;
+    min-height: 380px;
+}
+
+/* Tabla de Datos */
+.table-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 22px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -2px rgba(0,0,0,0.06);
+    margin-bottom: 30px;
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.table-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.table-search input {
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+    width: 240px;
+}
+
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+thead th {
+    background: #f8fafc;
+    color: var(--primary);
+    font-weight: 600;
+    padding: 12px 14px;
+    border-bottom: 2px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+}
+
+thead th:hover {
+    background: #f1f5f9;
+}
+
+thead th:first-child,
+tbody td:first-child {
+    text-align: left;
+}
+
+tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.15s;
+}
+
+tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+tbody tr.total-row {
+    background-color: #f0f7ff;
+    font-weight: 700;
+}
+
+tbody td {
+    padding: 10px 14px;
+    color: #334155;
+}
+
+/* Footer */
+.footer-text {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 10px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-box">
+        <h1>Rendimiento de Internación</h1>
+        <div class="subtitle">Hospital Provincial Neuquén Dr. Eduardo Castro Rendón &bull; Año <span id="lbl-anio">__ANIO__</span></div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filter-panel">
+        <div class="filter-group">
+            <label for="sel-mes">Período / Mes</label>
+            <select id="sel-mes" onchange="aplicarFiltros()">
+                <!-- Opciones inyectadas por JS: Todos (por defecto) y cada mes -->
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="sel-servicio">Servicio</label>
+            <select id="sel-servicio" onchange="aplicarFiltros()">
+                <option value="TODOS">Todos los Servicios</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Tarjetas KPI -->
+    <div class="kpi-grid">
+        <div class="kpi-card highlight">
+            <div class="kpi-title">Egresos Totales</div>
+            <div class="kpi-value" id="kpi-egresos">0</div>
+            <div class="kpi-sub" id="kpi-egresos-sub">Altas: 0 | Def: 0</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-title">% Ocupación</div>
+            <div class="kpi-value" id="kpi-ocupacion">0%</div>
+            <div class="kpi-sub" id="kpi-ocupacion-sub">Pac. Día vs Camas Disp.</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-title">Prom. Pacientes Día</div>
+            <div class="kpi-value" id="kpi-pacientes">0</div>
+            <div class="kpi-sub" id="kpi-pacientes-sub">Pacientes censados / día</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-title">Prom. Camas Disp.</div>
+            <div class="kpi-value" id="kpi-camas">0</div>
+            <div class="kpi-sub" id="kpi-camas-sub">Dotación activa promedio</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-title">Prom. Permanencia</div>
+            <div class="kpi-value" id="kpi-permanencia">0 d</div>
+            <div class="kpi-sub" id="kpi-permanencia-sub">Días estada promedio</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-title">Giro Cama</div>
+            <div class="kpi-value" id="kpi-giro">0</div>
+            <div class="kpi-sub">Egresos por cama disponible</div>
+        </div>
+        <div class="kpi-card danger">
+            <div class="kpi-title">Tasa Mortalidad</div>
+            <div class="kpi-value" id="kpi-mortalidad">0%</div>
+            <div class="kpi-sub" id="kpi-mortalidad-sub">Defunciones sobre egresos</div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="charts-grid">
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">Porcentaje de Ocupación por Servicio</div>
+            </div>
+            <div class="chart-container">
+                <canvas id="chartOcupacion"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">Volumen de Egresos por Servicio</div>
+            </div>
+            <div class="chart-container">
+                <canvas id="chartEgresos"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card full-width">
+            <div class="chart-header">
+                <div class="chart-title">Evolución Mensual (Líneas: % Ocupación y Egresos)</div>
+            </div>
+            <div class="chart-container">
+                <canvas id="chartEvolucion"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card full-width">
+            <div class="chart-header">
+                <div class="chart-title">Evolución Mensual (Barras: % Ocupación y Línea: Egresos)</div>
+            </div>
+            <div class="chart-container">
+                <canvas id="chartEvolucionBarras"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Rendimiento -->
+    <div class="table-card">
+        <div class="table-header">
+            <div>
+                <div class="table-title">Detalle de Indicadores por Servicio</div>
+            </div>
+            <div class="table-search">
+                <input type="text" id="tabla-filtro" placeholder="Buscar servicio..." onkeyup="filtrarTabla()">
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table id="tabla-rendimiento">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">Servicio</th>
+                        <th onclick="sortTable(1)">Egresos</th>
+                        <th onclick="sortTable(2)">Altas</th>
+                        <th onclick="sortTable(3)">Defunc.</th>
+                        <th onclick="sortTable(4)">Pases A</th>
+                        <th onclick="sortTable(5)">Pac. Día</th>
+                        <th onclick="sortTable(6)">Camas Disp.</th>
+                        <th onclick="sortTable(7)">Prom. Pac/Día</th>
+                        <th onclick="sortTable(8)">Prom. Camas</th>
+                        <th onclick="sortTable(9)">% Ocupación</th>
+                        <th onclick="sortTable(10)">Giro Cama</th>
+                        <th onclick="sortTable(11)">Mortalidad (%)</th>
+                        <th onclick="sortTable(12)">Permanencia (d)</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-cuerpo">
+                    <!-- Filas inyectadas por JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="footer-text">
+        Informe elaborado por el Servicio de Epidemiología HPN
+    </div>
+</div>
+
+<script>
+// Datos inyectados por Python
+const RAW_DATA = __DATA_JSON__;
+
+let chartOcupacion = null;
+let chartEgresos = null;
+let chartEvolucion = null;
+let chartEvolucionBarras = null;
+
+// Inicialización
+document.addEventListener("DOMContentLoaded", () => {
+    Chart.register(ChartDataLabels);
+    inicializarFiltros();
+    aplicarFiltros();
+});
+
+function inicializarFiltros() {
+    const selMes = document.getElementById("sel-mes");
+    const selServ = document.getElementById("sel-servicio");
+
+    // Extraer meses únicos preservando orden de aparición
+    const meses = [...new Set(RAW_DATA.map(d => d.mes))];
+    selMes.innerHTML = "";
+    
+    // Opción TODOS por defecto
+    const optTodos = document.createElement("option");
+    optTodos.value = "TODOS";
+    optTodos.textContent = "Todos los Meses (Acumulado)";
+    optTodos.selected = true;
+    selMes.appendChild(optTodos);
+
+    meses.forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m;
+        opt.textContent = m;
+        selMes.appendChild(opt);
+    });
+
+    // Extraer servicios únicos (excluyendo TOTAL_MES)
+    const servicios = [...new Set(RAW_DATA.filter(d => d.tipo_registro === "SERVICIO").map(d => d.servicio))].sort();
+    servicios.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s;
+        opt.textContent = s;
+        selServ.appendChild(opt);
+    });
+}
+
+function consolidarRegistros(records, nombreServicio, tipoReg) {
+    if (!records || records.length === 0) return null;
+
+    const sumDiasFunc = records.reduce((acc, r) => acc + (r.dias_funcionamiento || 0), 0);
+    // Para el promedio diario, tomamos la suma de dias de funcionamiento ponderada o directa
+    // Si consolidamos servicios a lo largo de meses, usamos la suma de dias del periodo
+    const diasPeriodo = Math.max(...records.map(r => r.dias_funcionamiento || 0)) > 0 ? 
+                        records.reduce((acc, r) => acc + (r.dias_funcionamiento || 0), 0) : 1;
+
+    const egresos_total = records.reduce((acc, r) => acc + (r.egresos_total || 0), 0);
+    const egresos_altas = records.reduce((acc, r) => acc + (r.egresos_altas || 0), 0);
+    const egresos_defunciones = records.reduce((acc, r) => acc + (r.egresos_defunciones || 0), 0);
+    const egresos_pases_a = records.reduce((acc, r) => acc + (r.egresos_pases_a || 0), 0);
+    const pacientes_dia = records.reduce((acc, r) => acc + (r.pacientes_dia || 0), 0);
+    const camas_disponibles = records.reduce((acc, r) => acc + (r.camas_disponibles || 0), 0);
+    const dias_estada = records.reduce((acc, r) => acc + (r.dias_estada || 0), 0);
+
+    const prom_pacientes_dia = sumDiasFunc > 0 ? Math.round(pacientes_dia / sumDiasFunc) : 0;
+    const prom_camas_disp_float = sumDiasFunc > 0 ? camas_disponibles / sumDiasFunc : 0;
+    const prom_camas_disponibles = Math.round(prom_camas_disp_float);
+    const prom_dias_estada = egresos_total > 0 ? Math.round(dias_estada / egresos_total) : 0;
+    const prom_permanencia = egresos_total > 0 ? Math.round(pacientes_dia / egresos_total) : 0;
+
+    const porc_ocupacion = camas_disponibles > 0 ? Number(((pacientes_dia / camas_disponibles) * 100).toFixed(1)) : 0.0;
+    const giro_camas = prom_camas_disp_float > 0 ? Number((egresos_total / prom_camas_disp_float).toFixed(1)) : 0.0;
+    const tasa_mortalidad = egresos_total > 0 ? Number(((egresos_defunciones / egresos_total) * 100).toFixed(1)) : 0.0;
+
+    return {
+        servicio: nombreServicio,
+        tipo_registro: tipoReg,
+        dias_funcionamiento: sumDiasFunc,
+        egresos_total,
+        egresos_altas,
+        egresos_defunciones,
+        egresos_pases_a,
+        pacientes_dia,
+        camas_disponibles,
+        dias_estada,
+        prom_pacientes_dia,
+        prom_camas_disponibles,
+        prom_dias_estada,
+        prom_permanencia,
+        porc_ocupacion,
+        giro_camas,
+        tasa_mortalidad
+    };
+}
+
+function aplicarFiltros() {
+    const mesSel = document.getElementById("sel-mes").value;
+    const servSel = document.getElementById("sel-servicio").value;
+
+    let totalRow = null;
+    let serviciosData = [];
+
+    if (mesSel === "TODOS") {
+        // Consolidar todos los meses disponibles
+        const totalMesRows = RAW_DATA.filter(d => d.tipo_registro === "TOTAL_MES");
+        totalRow = consolidarRegistros(totalMesRows, "HOSPITAL E. CASTRO RENDON", "TOTAL_MES");
+
+        // Agrupar por servicio
+        const listaServicios = [...new Set(RAW_DATA.filter(d => d.tipo_registro === "SERVICIO").map(d => d.servicio))].sort();
+        serviciosData = listaServicios.map(servName => {
+            const servRows = RAW_DATA.filter(d => d.tipo_registro === "SERVICIO" && d.servicio === servName);
+            return consolidarRegistros(servRows, servName, "SERVICIO");
+        }).filter(Boolean);
+    } else {
+        // Filtrar por un mes específico
+        const dataMes = RAW_DATA.filter(d => d.mes === mesSel);
+        totalRow = dataMes.find(d => d.tipo_registro === "TOTAL_MES");
+        serviciosData = dataMes.filter(d => d.tipo_registro === "SERVICIO");
+    }
+
+    // Si hay filtro de servicio específico
+    if (servSel !== "TODOS") {
+        serviciosData = serviciosData.filter(d => d.servicio === servSel);
+    }
+
+    // Actualizar KPIs
+    actualizarKPIs(servSel === "TODOS" ? totalRow : serviciosData[0], servSel);
+
+    // Actualizar Gráficos
+    actualizarGraficos(serviciosData, mesSel, servSel);
+
+    // Actualizar Tabla
+    actualizarTabla(serviciosData, servSel === "TODOS" ? totalRow : null);
+}
+
+function actualizarKPIs(row, servSel) {
+    if (!row) return;
+
+    document.getElementById("kpi-egresos").textContent = Number(row.egresos_total).toLocaleString();
+    document.getElementById("kpi-egresos-sub").textContent = `Altas: ${row.egresos_altas} | Def: ${row.egresos_defunciones} | Pases: ${row.egresos_pases_a}`;
+    
+    document.getElementById("kpi-ocupacion").textContent = `${row.porc_ocupacion}%`;
+    document.getElementById("kpi-pacientes").textContent = Number(row.prom_pacientes_dia).toLocaleString();
+    document.getElementById("kpi-camas").textContent = Number(row.prom_camas_disponibles).toLocaleString();
+    document.getElementById("kpi-permanencia").textContent = `${row.prom_permanencia} d`;
+    document.getElementById("kpi-giro").textContent = row.giro_camas;
+    document.getElementById("kpi-mortalidad").textContent = `${row.tasa_mortalidad}%`;
+    document.getElementById("kpi-mortalidad-sub").textContent = `${row.egresos_defunciones} defunciones registradas`;
+}
+
+function actualizarGraficos(servicios, mesSel, servSel) {
+    // 1. Gráfico de Ocupación por Servicio (ordenado de mayor a menor)
+    const servOrdenados = [...servicios].sort((a, b) => b.porc_ocupacion - a.porc_ocupacion);
+    const labelsOcup = servOrdenados.map(d => d.servicio);
+    const dataOcup = servOrdenados.map(d => d.porc_ocupacion);
+    const colorsOcup = dataOcup.map(v => v >= 80 ? '#2563eb' : (v >= 60 ? '#0284c7' : '#94a3b8'));
+
+    if (chartOcupacion) chartOcupacion.destroy();
+    const ctxOcup = document.getElementById("chartOcupacion").getContext("2d");
+    chartOcupacion = new Chart(ctxOcup, {
+        type: 'bar',
+        data: {
+            labels: labelsOcup,
+            datasets: [{
+                label: '% Ocupación',
+                data: dataOcup,
+                backgroundColor: colorsOcup,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                datalabels: {
+                    anchor: 'end',
+                    align: 'right',
+                    formatter: (v) => `${v}%`,
+                    font: { weight: 'bold', size: 11 },
+                    color: '#1e293b'
+                }
+            },
+            scales: {
+                x: {
+                    max: Math.max(100, ...dataOcup) + 10,
+                    grid: { color: '#f1f5f9' },
+                    ticks: { callback: v => `${v}%` }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { font: { size: 11 } }
+                }
+            }
+        }
+    });
+
+    // 2. Gráfico de Egresos por Tipo (Altas, Defunciones, Pases)
+    const topEgresos = [...servicios].sort((a, b) => b.egresos_total - a.egresos_total).slice(0, 10);
+    const labelsEgr = topEgresos.map(d => d.servicio);
+
+    if (chartEgresos) chartEgresos.destroy();
+    const ctxEgr = document.getElementById("chartEgresos").getContext("2d");
+    chartEgresos = new Chart(ctxEgr, {
+        type: 'bar',
+        data: {
+            labels: labelsEgr,
+            datasets: [
+                {
+                    label: 'Altas',
+                    data: topEgresos.map(d => d.egresos_altas),
+                    backgroundColor: '#16a34a',
+                    borderRadius: 3
+                },
+                {
+                    label: 'Pases A',
+                    data: topEgresos.map(d => d.egresos_pases_a),
+                    backgroundColor: '#f59e0b',
+                    borderRadius: 3
+                },
+                {
+                    label: 'Defunciones',
+                    data: topEgresos.map(d => d.egresos_defunciones),
+                    backgroundColor: '#dc2626',
+                    borderRadius: 3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' },
+                datalabels: { display: false }
+            },
+            scales: {
+                x: { stacked: true, ticks: { font: { size: 10 } } },
+                y: { stacked: true, grid: { color: '#f1f5f9' } }
+            }
+        }
+    });
+
+    // 3. Evolución Mensual
+    const mesesDisponibles = [...new Set(RAW_DATA.map(d => d.mes))];
+    const evolData = mesesDisponibles.map(m => {
+        if (servSel === "TODOS") {
+            const r = RAW_DATA.find(d => d.mes === m && d.tipo_registro === "TOTAL_MES");
+            return r || { porc_ocupacion: 0, egresos_total: 0 };
+        } else {
+            const r = RAW_DATA.find(d => d.mes === m && d.tipo_registro === "SERVICIO" && d.servicio === servSel);
+            return r || { porc_ocupacion: 0, egresos_total: 0 };
+        }
+    });
+
+    if (chartEvolucion) chartEvolucion.destroy();
+    const ctxEvol = document.getElementById("chartEvolucion").getContext("2d");
+    chartEvolucion = new Chart(ctxEvol, {
+        type: 'line',
+        data: {
+            labels: mesesDisponibles,
+            datasets: [
+                {
+                    label: '% Ocupación',
+                    data: evolData.map(d => d.porc_ocupacion),
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    yAxisID: 'yOcup',
+                    fill: true,
+                    tension: 0.3
+                },
+                {
+                    label: 'Egresos Totales',
+                    data: evolData.map(d => d.egresos_total),
+                    borderColor: '#16a34a',
+                    borderDash: [5, 5],
+                    yAxisID: 'yEgr',
+                    tension: 0.3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' },
+                datalabels: { display: false }
+            },
+            scales: {
+                yOcup: {
+                    type: 'linear',
+                    position: 'left',
+                    min: 0,
+                    max: 100,
+                    title: { display: true, text: '% Ocupación' },
+                    grid: { color: '#f1f5f9' },
+                    ticks: { callback: v => `${v}%` }
+                },
+                yEgr: {
+                    type: 'linear',
+                    position: 'right',
+                    title: { display: true, text: 'Egresos' },
+                    grid: { drawOnChartArea: false }
+                }
+            }
+        }
+    });
+
+    // 4. Evolución Mensual en BARRAS (% Ocupación) con Línea de Egresos
+    if (chartEvolucionBarras) chartEvolucionBarras.destroy();
+    const ctxEvolBarras = document.getElementById("chartEvolucionBarras").getContext("2d");
+    chartEvolucionBarras = new Chart(ctxEvolBarras, {
+        type: 'bar',
+        data: {
+            labels: mesesDisponibles,
+            datasets: [
+                {
+                    type: 'bar',
+                    label: '% Ocupación',
+                    data: evolData.map(d => d.porc_ocupacion),
+                    backgroundColor: 'rgba(37, 99, 235, 0.75)',
+                    borderRadius: 6,
+                    yAxisID: 'yOcup',
+                    order: 2
+                },
+                {
+                    type: 'line',
+                    label: 'Egresos Totales',
+                    data: evolData.map(d => d.egresos_total),
+                    borderColor: '#16a34a',
+                    backgroundColor: '#16a34a',
+                    borderWidth: 3,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    yAxisID: 'yEgr',
+                    tension: 0.25,
+                    order: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' },
+                datalabels: {
+                    formatter: (value, ctx) => {
+                        if (ctx.datasetIndex === 0) return `${value}%`;
+                        return value;
+                    },
+                    anchor: 'end',
+                    align: 'top',
+                    font: { size: 10, weight: 'bold' },
+                    color: (ctx) => ctx.datasetIndex === 0 ? '#1d4f7a' : '#15803d'
+                }
+            },
+            scales: {
+                yOcup: {
+                    type: 'linear',
+                    position: 'left',
+                    min: 0,
+                    max: 100,
+                    title: { display: true, text: '% Ocupación' },
+                    grid: { color: '#f1f5f9' },
+                    ticks: { callback: v => `${v}%` }
+                },
+                yEgr: {
+                    type: 'linear',
+                    position: 'right',
+                    title: { display: true, text: 'Egresos' },
+                    grid: { drawOnChartArea: false }
+                }
+            }
+        }
+    });
+}
+
+function actualizarTabla(servicios, totalMesRow) {
+    const tbody = document.getElementById("tabla-cuerpo");
+    tbody.innerHTML = "";
+
+    const agregarFila = (d, esTotal = false) => {
+        const tr = document.createElement("tr");
+        if (esTotal) tr.className = "total-row";
+        tr.innerHTML = `
+            <td>${d.servicio}</td>
+            <td>${Number(d.egresos_total).toLocaleString()}</td>
+            <td>${Number(d.egresos_altas).toLocaleString()}</td>
+            <td>${Number(d.egresos_defunciones).toLocaleString()}</td>
+            <td>${Number(d.egresos_pases_a).toLocaleString()}</td>
+            <td>${Number(d.pacientes_dia).toLocaleString()}</td>
+            <td>${Number(d.camas_disponibles).toLocaleString()}</td>
+            <td>${d.prom_pacientes_dia}</td>
+            <td>${d.prom_camas_disponibles}</td>
+            <td><strong>${d.porc_ocupacion}%</strong></td>
+            <td>${d.giro_camas}</td>
+            <td>${d.tasa_mortalidad}%</td>
+            <td>${d.prom_permanencia}</td>
+        `;
+        tbody.appendChild(tr);
+    };
+
+    servicios.forEach(s => agregarFila(s, false));
+    if (totalMesRow) {
+        agregarFila(totalMesRow, true);
+    }
+}
+
+function filtrarTabla() {
+    const term = document.getElementById("tabla-filtro").value.toLowerCase();
+    const rows = document.querySelectorAll("#tabla-cuerpo tr");
+    rows.forEach(r => {
+        const txt = r.textContent.toLowerCase();
+        r.style.display = txt.includes(term) ? "" : "none";
+    });
+}
+
+let sortDir = {};
+function sortTable(colIndex) {
+    const table = document.getElementById("tabla-rendimiento");
+    const tbody = document.getElementById("tabla-cuerpo");
+    const rows = Array.from(tbody.querySelectorAll("tr:not(.total-row)"));
+    const totalRow = tbody.querySelector(".total-row");
+
+    const currentDir = sortDir[colIndex] === 'asc' ? 'desc' : 'asc';
+    sortDir[colIndex] = currentDir;
+
+    rows.sort((a, b) => {
+        let valA = a.children[colIndex].textContent.trim().replace('%', '').replace(/,/g, '');
+        let valB = b.children[colIndex].textContent.trim().replace('%', '').replace(/,/g, '');
+
+        const numA = parseFloat(valA);
+        const numB = parseFloat(valB);
+
+        if (!isNaN(numA) && !isNaN(numB)) {
+            return currentDir === 'asc' ? numA - numB : numB - numA;
+        }
+        return currentDir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    });
+
+    tbody.innerHTML = "";
+    rows.forEach(r => tbody.appendChild(r));
+    if (totalRow) tbody.appendChild(totalRow);
+}
+</script>
+
+</body>
+</html>

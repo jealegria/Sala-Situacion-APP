@@ -28,9 +28,12 @@ from app.ui.pages.informes.sm_tocogineco        import SmTocoginecPage
 from app.ui.pages.informes.vacunatorio          import VacunatorioPage
 from app.ui.pages.informes.eventos_obstetricos import EventosObstetricosPage
 from app.ui.pages.informes.imagenes            import ImagenesPage
+from app.ui.pages.informes.rendimiento_internacion import RendimientoInternacionPage
+from app.ui.pages.informes.quirofano           import QuirofanoPage
 
 # Sub-paginas de Utilidades
 from app.ui.pages.utilidades.partos_con_vsr    import PartosConVsrPage
+from app.ui.pages.utilidades.consolidar_hojas  import ConsolidarHojasPage
 
 
 class MainWindow(QMainWindow):
@@ -95,6 +98,8 @@ class MainWindow(QMainWindow):
                 ("inf_vacunatorio",        "Vacunatorio",          VacunatorioPage()),
                 ("inf_eventos_obstetricos", "Panel de Obstetricia", EventosObstetricosPage()),
                 ("inf_imagenes",           "Imágenes",             ImagenesPage()),
+                ("inf_rendimiento_internacion", "Rendimiento Internación", RendimientoInternacionPage()),
+                ("inf_quirofano",          "Quirófano",            QuirofanoPage()),
             ]
         )
 
@@ -104,6 +109,7 @@ class MainWindow(QMainWindow):
             label="Utilidades",
             items=[
                 ("util_partos_con_vsr", "Partos con VSR", PartosConVsrPage()),
+                ("util_consolidar_hojas", "Limpiar Excel Quirófano", ConsolidarHojasPage()),
             ]
         )
 
